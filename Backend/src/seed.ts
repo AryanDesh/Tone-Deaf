@@ -3,89 +3,81 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Starting database seeding...');
-
-  // Create some songs
-  const song1 = await prisma.songs.create({
+  // Create songdata
+  const songdata1 = await prisma.songdata.create({
     data: {
-      songId: 'SNG001',
-      mp3: '/music/song1.mp3',
-    },
-  });
-
-  const song2 = await prisma.songs.create({
-    data: {
-      songId: 'SNG002',
-      mp3: '/music/song2.mp3',
-    },
-  });
-
-  // Create metadata for songs
-  const metadata1 = await prisma.metadata.create({
-    data: {
-      title: 'Song One',
-      artist: 'Artist A',
-      album: 'Album Alpha',
+      title: 'Song 1',
+      artist: 'Artist 1',
+      album: 'Album 1',
       duration: 210,
-      images: '/images/song1.jpg',
-      tags: ['pop', '2024'],
-      songId: song1.id,
+      images: 'https://example.com/image1.jpg',
+      tags: ['pop', '2023'],
+      song: {
+        create: {
+          songId: 'song1',
+          mp3: 'https://example.com/song1.mp3',
+        },
+      },
     },
   });
 
-  const metadata2 = await prisma.metadata.create({
+  const songdata2 = await prisma.songdata.create({
     data: {
-      title: 'Song Two',
-      artist: 'Artist B',
-      album: 'Album Beta',
-      duration: 180,
-      images: '/images/song2.jpg',
-      tags: ['rock', '2023'],
-      songId: song2.id,
+      title: 'Song 2',
+      artist: 'Artist 2',
+      album: 'Album 2',
+      duration: 200,
+      images: 'https://example.com/image2.jpg',
+      tags: ['rock', '2022'],
+      song: {
+        create: {
+          songId: 'song2',
+          mp3: 'https://example.com/song2.mp3',
+        },
+      },
     },
   });
 
-  // Create a user
+  // Create User
   const user = await prisma.user.create({
     data: {
-      username: 'johndoe',
-      password: 'hashedpassword123', // Use a real hashing mechanism
-      email: 'johndoe@example.com',
-      playlists: {
-        create: [
-          {
-            name: 'Liked',
-            songs: {
-              connect: [
-                { id: metadata1.id },
-                { id: metadata2.id },
-              ],
-            },
-          },
-        ],
-      },
+      username: 'john_doe',
+      password: 'hashed_password',
+      email: 'john@example.com',
     },
   });
 
-  // Create another playlist for the user
-  await prisma.playlist.create({
+  // Create Playlist
+  const playlist = await prisma.playlist.create({
     data: {
-      name: 'Chill Vibes',
-      userId: user.id,
-      songs: {
-        connect: [{ id: metadata1.id }],
-      },
+      name: 'My Favorite Songs',
+      user: { connect: { id: user.id } },
     },
   });
 
-  console.log('Database seeding completed.');
+  // Create PlaylistSong entries manually
+  await prisma.playlistSong.createMany({
+    data: [
+      { playlistId: playlist.id, SongdataId: songdata1.id },
+      { playlistId: playlist.id, SongdataId: songdata2.id },
+    ],
+  });
+
+  // Verify the data
+  const playlistsWithSongs = await prisma.playlist.findMany({
+    include: {
+      PlaylistSong: { include: { Songdata: true } },
+    },
+  });
+  console.log('Playlists with Songs:', JSON.stringify(playlistsWithSongs, null, 2));
 }
 
 main()
-  .catch((e) => {
-    console.error('Error during seeding:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
   });

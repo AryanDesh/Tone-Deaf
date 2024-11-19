@@ -13,16 +13,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Metadata {
+model Songdata {
   id        Int      @id @default(autoincrement())
   title     String
   artist    String
   album     String?
   duration  Int?
   images    String?
-  tags      String[] // Prisma supports arrays for databases that allow it
+  tags      String[] 
   songId    Int      @unique
-  song      Songs    @relation(fields: [songId], references: [id]) // Relates to Songs
+  song      Songs    @relation(fields: [songId], references: [id]) 
   PlaylistSong PlaylistSong[]
 
   Playlist Playlist[] @relation("PlaylistSongs")
@@ -30,36 +30,35 @@ model Metadata {
 
 model Songs {
   id        Int      @id @default(autoincrement())
-  songId    String   @unique // Represents the unique song identifier
-  mp3       String   // Assume this will store the path or URL to the mp3
-  metadata  Metadata? @relation // One-to-one relationship to Metadata
+  songId    String   @unique 
+  mp3       String   
+  Songdata  Songdata? @relation 
 }
 
 model User {
   id        Int        @id @default(autoincrement())
   username  String     @unique
-  password  String     // Assuming the hashed password is stored as a string
+  password  String     
   email     String     @unique
-  playlists Playlist[] // One-to-many relationship with Playlist
+  playlists Playlist[] 
   likedId   Int?       
 }
 
 model Playlist {
   id     Int        @id @default(autoincrement())
   name   String
-  user   User       @relation(fields: [userId], references: [id]) // Relates to User
+  user   User       @relation(fields: [userId], references: [id]) 
   userId Int
-  songs  Metadata[] @relation("PlaylistSongs") // Many-to-many relationship with Metadata
+  songs  Songdata[] @relation("PlaylistSongs") 
   PlaylistSong PlaylistSong[]
 }
 
-/// Many-to-many relation table between Playlist and Metadata
 model PlaylistSong {
   playlistId Int
-  metadataId Int
+  SongdataId Int
   playlist   Playlist @relation(fields: [playlistId], references: [id])
-  metadata   Metadata @relation(fields: [metadataId], references: [id])
+  Songdata   Songdata @relation(fields: [SongdataId], references: [id])
 
-  @@id([playlistId, metadataId]) // Composite primary key for many-to-many relationships
+  @@id([playlistId, SongdataId]) 
 }
 
