@@ -1,6 +1,10 @@
+
 function App() {
   return (
-    <div className="underline text-3xl">App</div>
+    <main className="flex justify-center">
+      <div className="bg-primary-blue w-full h-full min-h-screen text-primary-white">
+      </div>
+    </main>
   )
 }
 
