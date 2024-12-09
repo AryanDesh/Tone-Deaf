@@ -23,21 +23,22 @@ export default {
         "Geostar": ["Geostar"]
       },
       keyframes: {
-        lift: {
+        shootingStar: {
           "0%": {
-            transform: "translateY(0)",
-            opacity: "1",
-            visibility: "visible"
+            transform: "rotate(315deg) translateX(0)",
+            opacity: 1
+          },
+          "70%": {
+            opacity: 1
           },
           "100%": {
-            transform: "translateY(-100%)",
-            opacity: "0",
-            visibility: "hidden"
+            transform: "rotate(315deg) translateX(-1500px)",
+            opacity: 0
           }
-        } 
+        },
       },
       animation: {
-        lift: "lift 1s ease-in-out 3s",
+        shootingStar: "shootingStar 3s linear infinite"
       }
     },
   },
