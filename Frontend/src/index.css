@@ -4,4 +4,5 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-@import "./pages/homepage.css"
+@import "./main.css";
+@import "./pages/homepage.css";
