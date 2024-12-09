@@ -1,0 +1,13 @@
+.homepage_background {
+  background-image: url('./../assets/Homepage/homepage_bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: bottom;
+}
+
+.homepage_parallax {
+  background-image: url('./../assets/Homepage/homepage_bg_removed.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: bottom;
+}
