@@ -13,27 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Songdata {
-  id        Int      @id @default(autoincrement())
-  title     String
-  artist    String
-  album     String?
-  duration  Int?
-  images    String?
-  tags      String[] 
-  songId    Int      @unique
-  song      Songs    @relation(fields: [songId], references: [id]) 
-  PlaylistSong PlaylistSong[]
-
-  Playlist Playlist[] @relation("PlaylistSongs")
-}
-
-model Songs {
-  id        Int      @id @default(autoincrement())
-  songId    String   @unique 
-  mp3       String   
-  Songdata  Songdata? @relation 
-}
 
 model User {
   id        Int        @id @default(autoincrement())
@@ -41,7 +20,39 @@ model User {
   password  String     
   email     String     @unique
   playlists Playlist[] 
+  streamLogs StreamLog[]
   likedId   Int?       
+}
+model Song {
+  id        Int      @id @default(autoincrement())
+  title     String
+  artist    String
+  album     String?
+  duration  Int?
+  images    String?
+  fileLoc   String  @unique
+  chunked   Boolean @default(false)
+  tags      TagsOnSongs[]
+  streamLog StreamLog[]
+  PlaylistSong PlaylistSong[]
+  Playlist Playlist[] @relation("PlaylistSongs")
+}
+
+model Tag {
+  id        Int        @id @default(autoincrement())
+  tag       String     @unique
+  Song      TagsOnSongs[] 
+}
+
+// Relation Table to showcase m-n relationship between Tag and Song Table.
+model TagsOnSongs {
+  songId  Int 
+  song    Song  @relation(fields: [songId], references: [id])
+  tagId   Int
+  tag     Tag   @relation(fields: [tagId], references: [id])
+  assignedAt DateTime @default(now())
+
+  @@id([songId, tagId])
 }
 
 model Playlist {
@@ -49,16 +60,27 @@ model Playlist {
   name   String
   user   User       @relation(fields: [userId], references: [id]) 
   userId Int
-  songs  Songdata[] @relation("PlaylistSongs") 
+  songs  Song[] @relation("PlaylistSongs") 
   PlaylistSong PlaylistSong[]
 }
 
+// Relation Table to showcase m-n relationship between Playlist and Song Table.
 model PlaylistSong {
   playlistId Int
-  SongdataId Int
+  SongId Int
   playlist   Playlist @relation(fields: [playlistId], references: [id])
-  Songdata   Songdata @relation(fields: [SongdataId], references: [id])
+  Song   Song @relation(fields: [SongId], references: [id])
 
-  @@id([playlistId, SongdataId]) 
+  @@id([playlistId, SongId]) 
 }
 
+
+model StreamLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  songId    Int
+  song      Song     @relation(fields: [songId], references: [id])
+  streamedAt DateTime @default(now())
+  ipAddress String?
+}
