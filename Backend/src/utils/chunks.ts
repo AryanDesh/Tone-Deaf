@@ -26,7 +26,7 @@ fs.readdir(dir, async (readDirError, files) => {
 
     const processFiles = files.map(async (file, index) => {
         const fileName = path.join(dir, file);
-        const outputFileName = path.join(dest, `${index}.m3u8`);
+        const outputFileName = path.join(dest, `${file}.m3u8`);
 
         try {
             const { stdout, stderr } = await exec(
