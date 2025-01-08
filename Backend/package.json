@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "ts-node src/seed.ts"
+    "prisma:seed": "ts-node src/seed.ts",
+    "metadata": "ts-node src/utils/music-metadata"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +26,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
+    "express-async-handler": "^1.2.0",
     "ffmpeg": "^0.0.4",
     "hls.js": "^1.5.17",
     "multer": "^1.4.5-lts.1",
