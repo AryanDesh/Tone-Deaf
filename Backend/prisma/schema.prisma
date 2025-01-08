@@ -16,7 +16,7 @@ datasource db {
 
 
 model User {
-  id        Int        @id @default(autoincrement())
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   username  String     @unique
   password  String     
   email     String     @unique
@@ -25,13 +25,12 @@ model User {
   likedId   Int?       
 }
 model Song {
-  id        Int      @id @default(autoincrement())
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title     String
   artist    String
   album     String?
   duration  Int?
   images    String?
-  fileLoc   String  @unique
   chunked   Boolean @default(false)
   tags      TagsOnSongs[]
   streamLog StreamLog[]
@@ -47,7 +46,7 @@ model Tag {
 
 // Relation Table to showcase m-n relationship between Tag and Song Table.
 model TagsOnSongs {
-  songId  Int 
+  songId  String  @db.Uuid
   song    Song  @relation(fields: [songId], references: [id])
   tagId   Int
   tag     Tag   @relation(fields: [tagId], references: [id])
@@ -59,8 +58,8 @@ model TagsOnSongs {
 model Playlist {
   id     Int        @id @default(autoincrement())
   name   String
+  userId String  @db.Uuid
   user   User       @relation(fields: [userId], references: [id]) 
-  userId Int
   songs  Song[] @relation("PlaylistSongs") 
   PlaylistSong PlaylistSong[]
 }
@@ -68,7 +67,7 @@ model Playlist {
 // Relation Table to showcase m-n relationship between Playlist and Song Table.
 model PlaylistSong {
   playlistId Int
-  SongId Int
+  SongId String @db.Uuid
   playlist   Playlist @relation(fields: [playlistId], references: [id])
   Song   Song @relation(fields: [SongId], references: [id])
 
@@ -78,9 +77,9 @@ model PlaylistSong {
 
 model StreamLog {
   id        Int      @id @default(autoincrement())
-  userId    Int?
+  userId    String?  @db.Uuid
   user      User?    @relation(fields: [userId], references: [id])
-  songId    Int
+  songId    String  @db.Uuid
   song      Song     @relation(fields: [songId], references: [id])
   streamedAt DateTime @default(now())
   ipAddress String?
