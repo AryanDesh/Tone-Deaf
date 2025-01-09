@@ -162,6 +162,11 @@ const chunking = async (
             fs.unlinkSync(filePath);
             console.log(`Original file ${filePath} deleted after processing.`);
         }
+        
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+          console.log(`Original image ${imagePath} deleted after processing.`);
+      }
     }
     
 }
