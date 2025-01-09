@@ -11,7 +11,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 
@@ -30,12 +29,12 @@ model Song {
   artist    String
   album     String?
   duration  Int?
-  images    String?
-  chunked   Boolean @default(false)
   tags      TagsOnSongs[]
   streamLog StreamLog[]
   PlaylistSong PlaylistSong[]
   Playlist Playlist[] @relation("PlaylistSongs")
+
+  @@unique([title , artist])
 }
 
 model Tag {
