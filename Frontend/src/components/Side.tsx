@@ -1,26 +1,49 @@
-import { ReactNode } from "react"
-import { Euler, Vector3 } from "three"
+import { FC, ReactNode, useCallback, useState } from "react"
 import { Html } from "@react-three/drei"
+import { ThreeEvent } from "@react-three/fiber";
 
-const Side = ({ position, rotation, color, children }: {
-  position: Vector3,
-  rotation: Euler,
-  color: string,
+interface SideProps {
+  position: [number, number, number],
+  rotation: [number, number, number],
   children: ReactNode
-}) => {
+}
+
+const Side : FC<SideProps> = ({ position, rotation, children }) => {
+  
+  const [isInteracting, setIsInteracting] = useState<boolean>(false);
+
+  const handlePointerDown = useCallback((e : ThreeEvent<PointerEvent>) => {
+    setIsInteracting(true)
+    e.stopPropagation()
+  }, [])
+  
+  const handlePointerUp = useCallback((e : ThreeEvent<PointerEvent>) => {
+    setIsInteracting(false)
+    e.stopPropagation();
+  }, [])
+  
+  const handleClick = useCallback((e : ThreeEvent<MouseEvent>) => {
+    if(isInteracting) {
+      e.stopPropagation()
+    }
+  }, [isInteracting])
+
   return (
     <mesh position={position} rotation={rotation}>
       <planeGeometry args={[4, 4]} />
-      <meshStandardMaterial color={color} />
+      <meshPhysicalMaterial metalness={0} roughness={0} envMapIntensity={0.9} clearcoat={1} transparent={true} opacity={1} transmission={0.95} color='aquamarine' reflectivity={0.2} />
       <Html
         transform
         distanceFactor={2}
         position={[0, 0, 0.01]}
         occlude
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onClick={handleClick}
       >
-        <div className="bg-white text-black p-4 rounded shadow-lg w-[790px] h-[790px] flex items-center justify-center text-center">
+        <section className="w-[790px] h-[790px] select-none">
           {children}
-        </div>
+        </section>
       </Html>
     </mesh>
   );
