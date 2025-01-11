@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState,  } from 'react'
+import { FC, useEffect, useRef, useState,  } from 'react'
 import { motion } from 'motion/react';
 
-const Homepage: React.FC = () => {
+const Homepage: FC = () => {
   
   const mainpage = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -22,7 +22,7 @@ const Homepage: React.FC = () => {
   }, [])
 
   return (
-    <div className={`w-full h-full ${isVisible ? "overflow-y-auto" : "overflow-y-hidden"}`}>
+    <main className={`w-full h-full ${isVisible ? "overflow-y-auto" : "overflow-y-hidden"}`}>
       <div className='homepage_background relative overflow-hidden'>
         <div className='absolute inset-0 w-full h-full'>
           {[...Array(10)].map((_, i) => (
@@ -43,7 +43,7 @@ const Homepage: React.FC = () => {
       <div ref={mainpage} className='min-h-screen'>
         Homepage
       </div>
-    </div>
+    </main>
   )
 }
 

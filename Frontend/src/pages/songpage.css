@@ -1,0 +1,16 @@
+.songpage_background {
+  z-index: 1;
+  background-image: url('./../assets/Songpage/songpage_bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.content {
+  height: 100%;
+  width: 100%;
+  background-color: blue;
+  font-size: 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
