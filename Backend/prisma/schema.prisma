@@ -63,7 +63,6 @@ model Playlist {
   PlaylistSong PlaylistSong[]
 }
 
-// Relation Table to showcase m-n relationship between Playlist and Song Table.
 model PlaylistSong {
   playlistId Int
   SongId String @db.Uuid
