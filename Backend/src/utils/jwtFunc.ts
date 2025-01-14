@@ -2,33 +2,21 @@ import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
 const jwtPassword = process.env.JWT_SECRET || 'secret';
+const refreshPassword = process.env.REFRESH_PASS || "refresh";
+
 const UserSchema = z.object({
     username : z.string().email(),
     password : z.string().min(6)
 });
 type InferSchema = z.infer<typeof UserSchema>;
 
-const signJwt = (username: string, password: string) => {
-    try {
-        UserSchema.parse({
-            username , password
-        });
-    } catch {
-        return null;
-    }
-    const payload = { username, password };
-    return jwt.sign(payload, jwtPassword, { expiresIn: '1h' });
+export const generateAccessToken = (id : string) => {
+    return jwt.sign({id : id}, jwtPassword!, { expiresIn: '1d' });
 }
 
-
-const verifyJwt = (token: string) : boolean => {
-    try{
-        jwt.verify(token, jwtPassword);
-        return true;
-    }
-    catch(e){
-        return false;
-    }
+export const verifyJwt = (token: string)  => {
+    const decoded = jwt.verify(token, jwtPassword);
+        return decoded;
 }
 function decodeJwt(token: string) {
     try {
@@ -37,9 +25,3 @@ function decodeJwt(token: string) {
         return false;
     }
 }
-export {
-    signJwt,
-    verifyJwt,
-    decodeJwt,
-    jwtPassword,
-  }
