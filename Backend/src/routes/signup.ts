@@ -3,7 +3,7 @@ import { prisma } from "../db";
 import bcrypt from 'bcrypt';
 import { generateAccessToken} from "../utils/jwtFunc";
 import z from 'zod'
-
+import { Playlist } from "@prisma/client";
 const signupRouter = Router();
 
 const UserSchema = z.object({
@@ -38,8 +38,19 @@ signupRouter.post('/', async(req, res) => {
             email , password: hashedPassword
         }
     })
-    const accessToken = generateAccessToken(user.id);
+    const likedPlaylist = await prisma.playlist.create({
+        data : {
+            name : "liked",
+            userId : user.id
 
+        }
+    })
+    prisma.user.update({
+        where: { id: user.id },
+            data: { likedId: likedPlaylist.id },
+    })
+    
+    const accessToken = generateAccessToken(user.id);
     res.cookie('accessToken', accessToken, { httpOnly: true, maxAge : 1 * 24 * 60 * 60 * 1000});
     
     res.status(201).json({ message : 'User signed up successfully '});

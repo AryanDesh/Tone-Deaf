@@ -4,7 +4,7 @@ import * as express from "express";
 declare global {
   namespace Express {
     interface Request {
-      user?: string | JwtPayload; // Adjust type based on your payload
+      userId?: string; // Adjust type based on your payload
     }
   }
 }

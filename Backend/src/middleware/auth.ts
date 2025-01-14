@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express"
 import { verifyJwt} from "../utils/jwtFunc";
-
 const auth = (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.accessToken;
     if(!token) {
@@ -11,7 +10,7 @@ const auth = (req: Request, res: Response, next: NextFunction) => {
     }
     try{
         const decoded = verifyJwt(token);
-        req.user = decoded;
+        req.userId = decoded.id;
         next();
     }catch(e){
         res.status(403).json({msg : "Invalid Token"});

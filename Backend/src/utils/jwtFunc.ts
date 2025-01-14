@@ -15,7 +15,7 @@ export const generateAccessToken = (id : string) => {
 }
 
 export const verifyJwt = (token: string)  => {
-    const decoded = jwt.verify(token, jwtPassword);
+    const decoded = jwt.verify(token, jwtPassword) as {id: string};
         return decoded;
 }
 function decodeJwt(token: string) {

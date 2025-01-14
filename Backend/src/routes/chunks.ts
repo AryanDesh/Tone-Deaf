@@ -39,7 +39,7 @@ chunkRouter.post(
 
     // @ts-ignore
     const mp3File = req.files?.mp3 || "";   
-    
+    console.log("image")
     const genres: string[] = JSON.parse(req.body.genres);
    
     if (!mp3File && !title) {
