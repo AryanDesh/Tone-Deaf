@@ -8,12 +8,12 @@ const AudioPlayer = () => {
 
   const audioRef = useRef<HTMLAudioElement>(null)
   
-  
-  const [src, setSrc] = useState('')
+  const [songSrc, setSongSrc] = useState('')
+  const [currSong, setCurrSong] = useState('3c64c554-21fe-4714-b2a4-9f2008969127')
   
   const getAudioFile = async () => {
-    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl('57f9eb70-9525-401e-989f-85e58fd4662e/57f9eb70-9525-401e-989f-85e58fd4662e.m3u8')
-    setSrc(data.publicUrl) 
+    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${currSong}/${currSong}.m3u8`)
+    setSongSrc(data.publicUrl) 
   }
   
   useEffect(() => {
@@ -21,18 +21,15 @@ const AudioPlayer = () => {
     const hls = new Hls();
 
     if(Hls.isSupported()) {
-      hls.loadSource(src) 
+      hls.loadSource(songSrc) 
       if(audioRef.current){
         hls.attachMedia(audioRef.current);
       }
     }
-  }, [src])
+  }, [songSrc, currSong])
 
   
-  /*
-    TODO: 
-      * Handle the cube rotation when the slider is moved by pressing down and moving
-      * Can see about getting the Audio Player in a seperate file
+  /** Handle the cube rotation when the slider is moved by pressing down and moving
   */
 
 
@@ -68,6 +65,10 @@ const AudioPlayer = () => {
       seekRef.current.style.setProperty('--range-progress', `${(currentTime / audioRef.current.duration) * 100}%`);
     }
   }, [audioRef, seekRef, setTrackProgress])
+  
+  useEffect(() => {
+    updateProgress()
+  }, [currSong, updateProgress])
 
   const startAnimation = useCallback(() => {
     if(audioRef.current && seekRef.current) {
@@ -113,6 +114,10 @@ const AudioPlayer = () => {
     setPlaying(prev => !prev)
   }
   
+  const playNext = () => {
+    setCurrSong('eaa82607-42a6-4bc5-b06c-842130c60e2e')
+  }
+  
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-1/2 flex justify-between items-center py-4">
@@ -129,7 +134,7 @@ const AudioPlayer = () => {
             }`}
           />
           <IconButton
-            clickFunction={handleClick}
+            clickFunction={playNext}
             src="/icons/player-track-next.svg"
           />
         </div>

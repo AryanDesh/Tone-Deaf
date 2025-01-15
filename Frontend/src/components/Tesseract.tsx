@@ -1,6 +1,8 @@
-import { About, Lyrics, Playing, Playlists, Profile, Rooms } from "../sections"
+import { About, Lyrics, Playing, Playlists, Profile, Rooms } from "../sections";
 
 const Tesseract = () => {
+  
+
   return (
     <group>
       <Playing />
@@ -10,7 +12,7 @@ const Tesseract = () => {
       <Lyrics />
       <Rooms />
     </group>
-  )
-}
+  );
+};
 
-export default Tesseract
+export default Tesseract;
