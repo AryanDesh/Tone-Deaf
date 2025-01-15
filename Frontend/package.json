@@ -15,12 +15,12 @@
     "@splinetool/react-spline": "^4.0.0",
     "@splinetool/runtime": "^1.9.46",
     "@supabase/supabase-js": "^2.47.12",
+    "axios": "^1.7.9",
     "hls.js": "^1.5.19",
     "motion": "^11.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router": "^7.0.2",
-    "recoil": "^0.7.7",
     "three": "^0.170.0"
   },
   "devDependencies": {

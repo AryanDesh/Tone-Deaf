@@ -30,8 +30,18 @@ const Side : FC<SideProps> = ({ position, rotation, children }) => {
 
   return (
     <mesh position={position} rotation={rotation}>
-      <planeGeometry args={[4, 4]} />
-      <meshPhysicalMaterial metalness={0} roughness={0} envMapIntensity={0.9} clearcoat={1} transparent={true} opacity={1} transmission={0.95} color='aquamarine' reflectivity={0.2} />
+      <planeGeometry args={[4,4]} />
+      <meshPhysicalMaterial
+        metalness={0}
+        roughness={0}
+        envMapIntensity={0.9}
+        clearcoat={1}
+        transparent={true}
+        opacity={1}
+        transmission={0.95}
+        color="aquamarine"
+        reflectivity={0.2}
+      />
       <Html
         transform
         distanceFactor={2}
