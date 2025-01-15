@@ -1,20 +1,30 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, FC } from "react";
 import IconButton from "./IconButton";
 import Hls from "hls.js";
 import { supabase } from "../utils/supe";
 
-const AudioPlayer = () => {
+/*
+  TODO:
+  1. Add a way to like song and add to playlist
+  2. Add functionality to show current queue
+
+*/
+interface AudioPlayerProps {
+  src: Song,
+  setSrc: React.Dispatch<React.SetStateAction<Song>>
+}
+
+const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
   
 
   const audioRef = useRef<HTMLAudioElement>(null)
   
   const [songSrc, setSongSrc] = useState('')
-  const [currSong, setCurrSong] = useState('3c64c554-21fe-4714-b2a4-9f2008969127')
   
-  const getAudioFile = async () => {
-    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${currSong}/${currSong}.m3u8`)
+  const getAudioFile = useCallback (async () => {
+    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${src.id}/${src.id}.m3u8`)
     setSongSrc(data.publicUrl) 
-  }
+  }, [src])
   
   useEffect(() => {
     getAudioFile()
@@ -26,7 +36,7 @@ const AudioPlayer = () => {
         hls.attachMedia(audioRef.current);
       }
     }
-  }, [songSrc, currSong])
+  }, [songSrc, getAudioFile])
 
   
   /** Handle the cube rotation when the slider is moved by pressing down and moving
@@ -68,7 +78,7 @@ const AudioPlayer = () => {
   
   useEffect(() => {
     updateProgress()
-  }, [currSong, updateProgress])
+  }, [updateProgress])
 
   const startAnimation = useCallback(() => {
     if(audioRef.current && seekRef.current) {
@@ -115,7 +125,7 @@ const AudioPlayer = () => {
   }
   
   const playNext = () => {
-    setCurrSong('eaa82607-42a6-4bc5-b06c-842130c60e2e')
+    console.log("Next")
   }
   
   return (
