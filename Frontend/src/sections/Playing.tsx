@@ -2,13 +2,19 @@ import { useState, useEffect } from "react";
 import { Side } from "../components"
 import { AudioPlayer } from "../components";
 import { supabase } from "../utils/supe";
+import { useAudioContext } from "../context";
 
 const Playing = () => {
   
   const [imSrc, setImSrc] = useState('')
   
+  const { currSong } = useAudioContext()
+  useEffect(() => {
+    console.log(currSong)
+  }, [currSong])
+  
   const getImageFile = () => {
-    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl('57f9eb70-9525-401e-989f-85e58fd4662e/57f9eb70-9525-401e-989f-85e58fd4662e.jpg')
+    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl('3c64c554-21fe-4714-b2a4-9f2008969127/3c64c554-21fe-4714-b2a4-9f2008969127.jpg')
     setImSrc(data.publicUrl) 
   }
   
