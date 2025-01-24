@@ -1,5 +1,6 @@
 import { Routes, BrowserRouter, Route } from "react-router"
 import { Homepage, Songpage } from "./pages"
+import Collab from "./pages/CollabPage"
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Homepage />} />
+            <Route path="/room" element={<Collab />}/>
             <Route path="/songs" element={<Songpage />} />
           </Routes>
         </BrowserRouter>
