@@ -8,6 +8,9 @@ import signupRouter from "./routes/signup";
 import songRouter from "./routes/songs";
 import userRouter from "./routes/user";
 import playlistRouter from "./routes/playlist";
+import { createServer } from 'node:http';
+import {Server} from "socket.io";
+import { sockets } from "./utils/collab";
 
 dotenv.config();
 
@@ -27,4 +30,15 @@ app.use('/api/user', userRouter);
 app.use('/api/song', songRouter);
 app.use('/api/user/playlist', playlistRouter);
 
-app.listen(PORT , () => console.log("Running on Port : ", PORT));
+export const server = createServer(app); 
+
+export const io = new Server(server, {
+    connectionStateRecovery: {},
+    cors : {
+      origin : "http://localhost:5173"
+    }
+})
+
+sockets();
+
+server.listen(PORT , () => console.log("Running on Port : ", PORT));

@@ -36,6 +36,7 @@
     "hls.js": "^1.5.17",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.1",
     "ts-node-dev": "^2.0.0",
     "uploadthing": "^7.4.0",
     "zod": "^3.24.1"
