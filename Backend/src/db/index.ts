@@ -16,9 +16,10 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 const supabaseUrl = process.env.SUPABASE_URL || "";
 const supabaseKey = process.env.SUPABASE_S3_ACCESS_KEY || "";
 
-if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase URL or Key is missing!");
-}
+console.log(supabaseKey + " " + supabaseUrl );
+// if (!supabaseUrl || !supabaseKey) {
+//     throw new Error("Supabase URL or Key is missing!");
+// }
 
 export const s3 = new S3Client({
     forcePathStyle: true,

@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState,  } from 'react'
 import { motion } from 'motion/react';
-
+import { ZoomIn } from '../components';
 const Homepage: FC = () => {
   
   const mainpage = useRef<HTMLDivElement>(null);
@@ -22,6 +22,7 @@ const Homepage: FC = () => {
   }, [])
 
   return (
+    <>
     <main className={`w-full h-full ${isVisible ? "overflow-y-auto" : "overflow-y-hidden"}`}>
       <div className='homepage_background relative overflow-hidden'>
         <div className='absolute inset-0 w-full h-full'>
@@ -40,10 +41,11 @@ const Homepage: FC = () => {
         <div className='homepage_parallax min-h-screen absolute inset-0' />
         <div className='bg-gradient-to-t from-primary-blue to-transparent min-h-screen absolute inset-0' />
       </div>
-      <div ref={mainpage} className='min-h-screen'>
-        Homepage
-      </div>
     </main>
+      <div  ref={mainpage} className="">        
+        < ZoomIn />
+      </div>
+    </>
   )
 }
 

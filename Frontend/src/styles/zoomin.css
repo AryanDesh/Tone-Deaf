@@ -1,0 +1,22 @@
+body{
+    overflow-x: hidden;
+}
+
+@layer components {
+    .image {
+      mask-image: url('/c.png'); 
+      mask-position: center;
+      mask-repeat: no-repeat;
+    }
+
+    .text-stroke{
+      -webkit-text-fill-color: transparent;
+      -webkit-text-stroke-color: white;
+      -webkit-text-stroke-width: 1px;
+    }
+
+    .perspective{
+        perspective: 2200px;
+    }
+  }
+  
