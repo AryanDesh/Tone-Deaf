@@ -1,9 +1,8 @@
-import { Room } from '../components'
-
+import { Card } from '../components'
 const Collab = () => {
   return (
     <div>
-        <Room></Room>
+      <Card></Card>
     </div>
   )
 }
