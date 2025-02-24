@@ -7,16 +7,18 @@ import { Playlist } from "@prisma/client";
 const signupRouter = Router();
 
 const UserSchema = z.object({
+    username: z.string(),
     email : z.string().email(),
     password : z.string().min(6)
 });
 
 signupRouter.post('/', async(req, res) => {
-    const {email, password} = req.body;
+    console.log("Signing UP");
+    const {username, email, password} = req.body;
 
     try {
         UserSchema.parse({
-            email , password
+            username, email , password
         });
     } catch (e){
         res.status(400).json({Error: e});
@@ -35,7 +37,7 @@ signupRouter.post('/', async(req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
         data : {
-            email , password: hashedPassword
+            username, email , password: hashedPassword
         }
     })
     const likedPlaylist = await prisma.playlist.create({
@@ -53,7 +55,7 @@ signupRouter.post('/', async(req, res) => {
     const accessToken = generateAccessToken(user.id);
     res.cookie('accessToken', accessToken, { httpOnly: true, maxAge : 1 * 24 * 60 * 60 * 1000});
     
-    res.status(201).json({ message : 'User signed up successfully '});
+    res.status(200).json({ message : 'User signed up successfully '});
 })
 
 export default signupRouter

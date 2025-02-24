@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useRef } from 'react'
 import bg from '../assets/Songpage/background.png'
 import {gsap} from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Card } from './'
+import { AuthComponent } from './'
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -61,8 +61,8 @@ const ZoomIn = () => {
               Welcome to experiencing music the way it was meant to be</p>
           </div>
         </div>
-        <div ref={container} className='-mt-120 zoom-container flex flex-wrap items-center justify-around '>
-          <Card></Card>
+        <div ref={container} className='-mt-80 zoom-container flex flex-wrap items-center justify-around '>
+          <AuthComponent></AuthComponent>
         </div>
       </section>
     </div>

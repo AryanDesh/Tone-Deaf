@@ -15,6 +15,7 @@
     "@splinetool/react-spline": "^4.0.0",
     "@splinetool/runtime": "^1.9.46",
     "@supabase/supabase-js": "^2.47.12",
+    "@types/axios": "^0.9.36",
     "@types/gsap": "^1.20.2",
     "axios": "^1.7.9",
     "gsap": "^3.12.7",
