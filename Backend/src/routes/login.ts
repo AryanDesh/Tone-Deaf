@@ -13,6 +13,7 @@ const UserSchema = z.object({
 });
 
 loginRouter.post('/', async(req, res) => {
+    console.log("logging in");
     const { email, password} = req.body;
 
     try {
