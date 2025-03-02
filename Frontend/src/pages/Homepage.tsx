@@ -23,6 +23,7 @@ const Homepage: FC = () => {
 
   return (
     <>
+    <div className="bg-primary-blue w-full h-full text-primary-white">
     <main className={`w-full h-full ${isVisible ? "overflow-y-auto" : "overflow-y-hidden"}`}>
       <div className='homepage_background relative overflow-hidden'>
         <div className='absolute inset-0 w-full h-full'>
@@ -45,6 +46,7 @@ const Homepage: FC = () => {
       <div  ref={mainpage} className="">        
         < ZoomIn />
       </div>
+    </div>
     </>
   )
 }
