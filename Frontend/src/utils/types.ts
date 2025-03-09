@@ -3,7 +3,7 @@ export interface Song {
     title: string
     artist: string
     album: string
-    duration: number
+    // duration: number
     coverArt?: string
     liked?: boolean
   }
@@ -11,7 +11,7 @@ export interface Song {
   export interface Playlist {
     id: string
     name: string
-    songCount: number
+    songs: string[]
     collaborative?: boolean
     createdBy?: string
   }
@@ -30,8 +30,9 @@ export interface Song {
   export interface CollaborationSession {
     id: string
     name: string
-    participants: number
+    participants: string[]
     active: boolean
+    song: Song
     createdBy: string
   }
   
