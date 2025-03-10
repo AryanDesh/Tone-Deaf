@@ -46,7 +46,10 @@ export default function Pages() {
           {activeTab === "songs" ? (
             <SongsPage showPlaylistModal={showPlaylistModal} togglePlaylistModal={togglePlaylistModal} />
           ) : (
-            <CollaborationPage />
+            <CollaborationPage 
+            showCollaborationModal={showCollaborationModal}
+            toggleCollaborationModal={toggleCollaborationModal}
+          />
           )}
         </main>
 

@@ -9,7 +9,7 @@ interface RecommendedSongsProps {
 
 const RecommendedSongs: React.FC<RecommendedSongsProps> = ({ songs, playSong }) => {
   return (
-    <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg p-6">
+    <div className="bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-4">Recommended for You</h2>
       <div className="grid grid-cols-2 gap-4">
         {songs.map((song) => (

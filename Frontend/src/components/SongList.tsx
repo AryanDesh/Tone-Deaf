@@ -1,6 +1,6 @@
 import type React from "react"
 import { Heart, Pause } from "lucide-react"
-import { useAudioContext } from "../context"
+import { useAudioContext } from "../context/"
 import type { Song } from "../types/songTypes"
 
 interface SongListProps {
@@ -18,7 +18,7 @@ const SongList: React.FC<SongListProps> = ({ songs, playSong }) => {
   }
 
   return (
-    <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg p-6">
+    <div className="bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-4">All Songs</h2>
       <table className="w-full">
         <thead>

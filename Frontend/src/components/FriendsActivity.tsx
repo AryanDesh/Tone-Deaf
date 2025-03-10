@@ -7,7 +7,7 @@ interface FriendsActivityProps {
 
 const FriendsActivity: React.FC<FriendsActivityProps> = ({ friends }) => {
   return (
-    <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg p-6 w-full">
+      <div className="bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-lg p-6">
       <h2 className="text-2xl font-bold mb-4">Friends Activity</h2>
       <div className="space-y-4">
         {friends.map((friend) => (
