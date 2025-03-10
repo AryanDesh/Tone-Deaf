@@ -1,20 +1,20 @@
 import { Routes, BrowserRouter, Route } from "react-router"
 import { Homepage, Songpage } from "./pages"
-import Collab from "./pages/CollabPage"
-
+import { AudioContextProvider } from "./context"
+import Pages from "./pages/Pages"
 function App() {
   return (
-    <div className="flex justify-center">
-      <div className="bg-primary-blue w-full h-full text-primary-white">
+    <div className="flex justify-center w-100dvw h-100-dvh">
+      <AudioContextProvider >
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Homepage />} />
-            <Route path="/room" element={<Collab />}/>
-            <Route path="/songs" element={<Songpage />} />
+            <Route path="/main" element={<Pages />}/>
+            {/* <Route path="/songs" element={< />} /> */}
           </Routes>
         </BrowserRouter>
+      </AudioContextProvider>
       </div>
-    </div>
   )
 }
 

@@ -1,157 +1,270 @@
-"use client"
-
-import type React from "react"
-import { useState, useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { gsap } from "gsap"
 import { CustomEase } from "gsap/CustomEase"
 
-gsap.registerPlugin(CustomEase)
+// Define the menu items type
+type MenuItem = {
+  title: string
+  url: string
+  number: string
+}
 
-const OsmoMenu: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false)
+// Menu items data
+const menuItems: MenuItem[] = [
+  { title: "About us", url: "#", number: "01" },
+  { title: "Our work", url: "#", number: "02" },
+  { title: "Services", url: "#", number: "03" },
+  { title: "Blog", url: "#", number: "04" },
+  { title: "Contact us", url: "#", number: "05" },
+]
+
+// Social links data
+const socialLinks = [
+  { title: "Instagram", url: "#" },
+  { title: "LinkedIn", url: "#" },
+  { title: "X/Twitter", url: "#" },
+  { title: "Awwwards", url: "#" },
+]
+
+export default function Menu() {
+  const navRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const bgPanelsRef = useRef<HTMLDivElement[]>([])
+  const menuLinksRef = useRef<HTMLAnchorElement[]>([])
+  const fadeTargetsRef = useRef<HTMLElement[]>([])
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const menuButtonTextsRef = useRef<HTMLParagraphElement[]>([])
+  const menuButtonIconRef = useRef<SVGSVGElement>(null)
+  const tlRef = useRef<gsap.core.Timeline>()
 
   useEffect(() => {
+    // Register GSAP plugins
+    gsap.registerPlugin(CustomEase)
+
+    // Create custom ease
     CustomEase.create("main", "0.65, 0.01, 0.05, 0.99")
+
+    // Set GSAP defaults
     gsap.defaults({
       ease: "main",
       duration: 0.7,
     })
 
-    const tl = gsap.timeline()
-
-    const openNav = () => {
-      tl.clear()
-        .set(".nav", { display: "block" })
-        .set(".menu", { xPercent: 0 }, "<")
-        .fromTo(".menu-button p", { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
-        .fromTo(".menu-button-icon", { rotate: 0 }, { rotate: 315 }, "<")
-        .fromTo(".overlay", { autoAlpha: 0 }, { autoAlpha: 1 }, "<")
-        .fromTo(".bg-panel", { xPercent: 101 }, { xPercent: 0, stagger: 0.12, duration: 0.575 }, "<")
-        .fromTo(".menu-link", { yPercent: 140, rotate: 10 }, { yPercent: 0, rotate: 0, stagger: 0.05 }, "<+=0.35")
-        .fromTo(
-          "[data-menu-fade]",
-          { autoAlpha: 0, yPercent: 50 },
-          { autoAlpha: 1, yPercent: 0, stagger: 0.04 },
-          "<+=0.2",
-        )
+    // Set initial state
+    if (navRef.current) {
+      gsap.set(navRef.current, { display: "none" })
     }
 
-    const closeNav = () => {
-      tl.clear()
-        .to(".overlay", { autoAlpha: 0 })
-        .to(".menu", { xPercent: 120 }, "<")
-        .to(".menu-button p", { yPercent: 0 }, "<")
-        .to(".menu-button-icon", { rotate: 0 }, "<")
-        .set(".nav", { display: "none" })
-    }
+    // Create timeline
+    tlRef.current = gsap.timeline()
 
-    if (isOpen) {
-      openNav()
-    } else {
-      closeNav()
-    }
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("keydown", handleEscape)
+    // Add event listeners for escape key
+    document.addEventListener("keydown", handleKeyDown)
 
     return () => {
-      document.removeEventListener("keydown", handleEscape)
+      document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isOpen])
+  }, [])
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && navRef.current?.getAttribute("data-nav") === "open") {
+      closeNav()
+    }
+  }
+
+  const openNav = () => {
+    if (!navRef.current) return
+
+    navRef.current.setAttribute("data-nav", "open")
+
+    tlRef.current
+      ?.clear()
+      .set(navRef.current, { display: "block" })
+      .set(menuRef.current, { xPercent: 0 }, "<")
+      .fromTo(menuButtonTextsRef.current, { yPercent: 0 }, { yPercent: -100, stagger: 0.2 })
+      .fromTo(menuButtonIconRef.current, { rotate: 0 }, { rotate: 315 }, "<")
+      .fromTo(overlayRef.current, { autoAlpha: 0 }, { autoAlpha: 1 }, "<")
+      .fromTo(bgPanelsRef.current, { xPercent: 101 }, { xPercent: 0, stagger: 0.12, duration: 0.575 }, "<")
+      .fromTo(menuLinksRef.current, { yPercent: 140, rotate: 10 }, { yPercent: 0, rotate: 0, stagger: 0.05 }, "<+=0.35")
+      .fromTo(
+        fadeTargetsRef.current,
+        { autoAlpha: 0, yPercent: 50 },
+        { autoAlpha: 1, yPercent: 0, stagger: 0.04 },
+        "<+=0.2",
+      )
+  }
+
+  const closeNav = () => {
+    if (!navRef.current) return
+
+    navRef.current.setAttribute("data-nav", "closed")
+
+    tlRef.current
+      ?.clear()
+      .to(overlayRef.current, { autoAlpha: 0 })
+      .to(menuRef.current, { xPercent: 120 }, "<")
+      .to(menuButtonTextsRef.current, { yPercent: 0 }, "<")
+      .to(menuButtonIconRef.current, { rotate: 0 }, "<")
+      .set(navRef.current, { display: "none" })
+  }
+
+  const toggleNav = () => {
+    const state = navRef.current?.getAttribute("data-nav")
+    if (state === "open") {
+      closeNav()
+    } else {
+      openNav()
+    }
+  }
 
   return (
-    <div className="osmo-ui">
-      <header className="header">
-        <div className="container is--full">
-          <nav className="flex justify-between items-center">
-            <a
-              href="https://osmo.supply/"
-              aria-label="home"
-              target="_blank"
-              className="flex items-center"
-              rel="noreferrer"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="66"
-                viewBox="0 0 66 20"
-                fill="none"
-                className="text-current"
-              >
-                {/* SVG paths for logo */}
-              </svg>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="160"
-                viewBox="0 0 160 160"
-                fill="none"
-                className="text-current ml-2"
-              >
-                {/* SVG path for icon */}
-              </svg>
-            </a>
-            <button onClick={() => setIsOpen(!isOpen)} className="flex items-center">
-              <div className="mr-2">
-                <p className="text-lg">{isOpen ? "Close" : "Menu"}</p>
-              </div>
-              <div className="w-6 h-6">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  className="w-full h-full transform transition-transform duration-700 ease-main"
+    <>
+      <div className="z-0 pointer-events-none flex flex-col justify-between items-stretch">
+        <header className="z-[110] pt-6 fixed inset-[0%_0%_auto]">
+          <div className="z-20 max-w-full px-4 sm:px-6 w-full mx-auto relative">
+            <nav className="justify-start items-center w-full flex">
+              <div className="justify-end items-center flex pointer-events-auto">
+                <button
+                  ref={menuButtonRef}
+                  role="button"
+                  onClick={toggleNav}
+                  className="gap-2.5 bg-red justify-end items-center -m-4 p-4 flex border-none"
                 >
-                  {/* SVG paths for menu icon */}
-                </svg>
+                  <div className="flex flex-col justify-start items-end h-[1.125em] overflow-hidden text-white">
+                    <p
+                      ref={(el) => (menuButtonTextsRef.current[0] = el as HTMLParagraphElement)}
+                      className="text-[1.125em] font-sans m-0 "
+                    >
+                      TONEDEAF
+                    </p>
+                    <p
+                      ref={(el) => (menuButtonTextsRef.current[1] = el as HTMLParagraphElement)}
+                      className="text-[1.125em] font-sans m-0"
+                    >
+                      TONES
+                    </p>
+                  </div>
+                  <div className="transition-transform duration-400 ease-[cubic-bezier(0.65,0.05,0,1)] hover:rotate-90">
+                    <svg
+                      ref={menuButtonIconRef}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="100%"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        d="M7.33333 16L7.33333 -3.2055e-07L8.66667 -3.78832e-07L8.66667 16L7.33333 16Z"
+                        fill="white"
+                      ></path>
+                      <path
+                        d="M16 8.66667L-2.62269e-07 8.66667L-3.78832e-07 7.33333L16 7.33333L16 8.66667Z"
+                        fill="white"
+                      ></path>
+                      <path
+                        d="M6 7.33333L7.33333 7.33333L7.33333 6C7.33333 6.73637 6.73638 7.33333 6 7.33333Z"
+                        fill="white"
+                      ></path>
+                      <path
+                        d="M10 7.33333L8.66667 7.33333L8.66667 6C8.66667 6.73638 9.26362 7.33333 10 7.33333Z"
+                        fill="white"
+                      ></path>
+                      <path
+                        d="M6 8.66667L7.33333 8.66667L7.33333 10C7.33333 9.26362 6.73638 8.66667 6 8.66667Z"
+                        fill="white"
+                      ></path>
+                      <path
+                        d="M10 8.66667L8.66667 8.66667L8.66667 10C8.66667 9.26362 9.26362 8.66667 10 8.66667Z"
+                        fill="white"
+                      ></path>
+                    </svg>
+                  </div>
+                </button>
               </div>
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <div className={`nav fixed inset-0 ${isOpen ? "block" : "hidden"}`}>
-        <div className="overlay absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsOpen(false)}></div>
-        <nav className="menu absolute right-0 top-0 bottom-0 w-full max-w-md bg-white">
-          <div className="menu-bg relative h-full">
-            <div className="bg-panel absolute inset-0 bg-gray-100"></div>
-            <div className="bg-panel absolute inset-0 bg-gray-200"></div>
-            <div className="bg-panel absolute inset-0 bg-gray-300"></div>
+            </nav>
           </div>
-          <div className="menu-inner relative h-full p-8 flex flex-col justify-between">
-            <ul className="menu-list space-y-6">
-              {["About us", "Our work", "Services", "Blog", "Contact us"].map((item, index) => (
-                <li key={item} className="menu-list-item">
-                  <a href="#" className="menu-link block relative overflow-hidden">
-                    <p className="menu-link-heading text-2xl font-bold">{item}</p>
-                    <p className="eyebrow text-sm text-gray-500">0{index + 1}</p>
-                    <div className="menu-link-bg absolute inset-0 bg-gray-100 transform translate-y-full transition-transform duration-300 ease-main"></div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <div className="menu-details">
-              <p data-menu-fade="" className="text-sm mb-4">
-                Socials
-              </p>
-              <div className="socials-row grid grid-cols-2 gap-4">
-                {["Instagram", "LinkedIn", "X/Twitter", "Awwwards"].map((social) => (
-                  <a key={social} data-menu-fade="" href="#" className="text-lg hover:underline">
-                    {social}
-                  </a>
+        </header>
+      </div>
+        <div ref={navRef} data-nav="closed" className="z-[100] w-full h-screen mx-auto fixed inset-0">
+          <div
+            ref={overlayRef}
+            onClick={toggleNav}
+            className="z-0 cursor-pointer bg-[#13131366] w-full h-full absolute inset-0"
+          ></div>
+
+          <nav
+            ref={menuRef}
+            className="pb-8 gap-20 pt-24 flex flex-col justify-between  items-start w-[74dvw] md:w-[35em] h-full ml-auto relative overflow-auto"
+          >
+            <div className="z-0 absolute inset-0">
+              <div
+                ref={(el) => (bgPanelsRef.current[0] = el as HTMLDivElement)}
+                className="z-0 bg-primary rounded-l-[1.25em] absolute inset-0"
+              ></div>
+              <div
+                ref={(el) => (bgPanelsRef.current[1] = el as HTMLDivElement)}
+                className="z-0 bg-neutral-100 rounded-l-[1.25em] absolute inset-0"
+              ></div>
+              <div
+                ref={(el) => (bgPanelsRef.current[2] = el as HTMLDivElement)}
+                className="z-0 bg-neutral-300 rounded-l-[1.25em] absolute inset-0"
+              ></div>
+            </div>
+
+            <div className="z-1 gap-20 flex flex-col justify-between items-start h-full relative overflow-auto">
+              <ul className="flex flex-col w-full mb-0 pl-0 list-none">
+                {menuItems.map((item, index) => (
+                  <li key={index} className="relative overflow-hidden md:h-auto">
+                    <a
+                      ref={(el) => (menuLinksRef.current[index] = el as HTMLAnchorElement)}
+                      href={item.url}
+                      className="py-3 pl-4 md:pl-8 w-full text-decoration-none flex group relative"
+                    >
+                      {/* Background overlay effect */}
+                      <div className="absolute inset-0 bg-black scale-y-0 opacity-0 transition-all duration-500 ease-in-out group-hover:scale-y-100 group-hover:opacity-100"></div>
+
+                      {/* Menu Text */}
+                      <p className="z-10 uppercase font-bold text-4xl md:text-[4.625em] leading-[0.75] transition-all duration-500 ease-in-out group-hover:-translate-y-2 group-hover:text-white relative">
+                        {item.title}
+                      </p>
+
+                      {/* Menu Number */}
+                      <p className="z-10 text-primary uppercase font-mono font-normal transition-all duration-500 ease-in-out group-hover:text-white relative">
+                        {item.number}
+                      </p>
+                    </a>
+                  </li>
                 ))}
+              </ul>
+
+
+              <div className="pl-4 md:pl-8 gap-5 flex flex-col justify-start items-start">
+                <p
+                  ref={(el) => (fadeTargetsRef.current[0] = el as HTMLElement)}
+                  data-menu-fade=""
+                  className="text-sm font-sans"
+                >
+                  Socials
+                </p>
+                <div className="gap-6 md:gap-6 flex flex-row">
+                  {socialLinks.map((link, index) => (
+                    <a
+                      key={index}
+                      ref={(el) => (fadeTargetsRef.current[index + 1] = el as HTMLElement)}
+                      data-menu-fade=""
+                      href={link.url}
+                      className="text-[1.125em] font-sans no-underline relative group"
+                    >
+                      <span>{link.title}</span>
+                      <span className="absolute left-0 bottom-0 w-full h-[1px] bg-primary origin-right scale-x-0 transition-transform duration-400 ease-[cubic-bezier(0.65,0.05,0,1)] group-hover:origin-left group-hover:scale-x-100"></span>
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </nav>
-      </div>
-    </div>
+          </nav>
+        </div>
+    </>
   )
 }
-
-export default OsmoMenu
-
