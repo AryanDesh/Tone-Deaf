@@ -1,18 +1,35 @@
-"use client"
-
 import type React from "react"
-
 import { Play, Pause, SkipBack, SkipForward, Heart, Volume2 } from "lucide-react"
-// import Image from "next/image"
 import { useAudioContext } from "../context"
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../utils/supe";
+import AudioPlayer from "./AudioPlayer";
 
 const Player: React.FC = () => {
   const { currSong, isPlaying, togglePlay, toggleLike } = useAudioContext()
 
-  if (!currSong) return null
+  if (!currSong) return null;
+
+  const [imSrc, setImSrc] = useState('')
+  useEffect(() => {
+    console.log(currSong)
+  }, [currSong])
+  
+  const getImageFile = useCallback(() => {
+    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${currSong.id}/${currSong.id}.jpg`)
+    setImSrc(data.publicUrl)
+  }, [currSong])
+  
+  useEffect(() => {
+    getImageFile()
+  }, [currSong, getImageFile])
+
+  useEffect(() => {
+    console.log(imSrc)
+  }, [imSrc])
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900/60 backdrop-filter backdrop-blur-lg border-t border-gray-800/50 z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900/60 backdrop-filter backdrop-blur-lg border-t border-gray-800/50 z-1">
       {/* Glassmorphism effect for the currently playing song */}
       <div className="max-w-7xl mx-auto h-24 px-4 flex items-center justify-between relative overflow-hidden">
         {/* Glassmorphism background */}
@@ -49,22 +66,23 @@ const Player: React.FC = () => {
 
         <div className="flex flex-col items-center z-10">
           <div className="flex items-center space-x-6 mb-2">
-            <button className="text-gray-300 hover:text-white transition-colors">
-              <SkipBack size={24} />
-            </button>
+            <AudioPlayer src={currSong} />
             <button
               onClick={togglePlay}
               className="bg-white rounded-full p-2 text-gray-900 hover:bg-gray-200 transition-colors"
             >
               {isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
+            {/* <button className="text-gray-300 hover:text-white transition-colors">
+              <SkipBack size={24} />
+            </button>
             <button className="text-gray-300 hover:text-white transition-colors">
               <SkipForward size={24} />
-            </button>
+            </button> */}
           </div>
-          <div className="w-64 h-1 bg-gray-700 rounded-full">
+          {/* <div className="w-64 h-1 bg-gray-700 rounded-full">
             <div className="w-1/3 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex items-center space-x-4 z-10">

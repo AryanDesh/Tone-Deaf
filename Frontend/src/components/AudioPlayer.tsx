@@ -14,7 +14,7 @@ interface AudioPlayerProps {
   setSrc: React.Dispatch<React.SetStateAction<Song>>
 }
 
-const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
+const AudioPlayer : FC<AudioPlayerProps> = ({ src }) => {
   
 
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -131,7 +131,7 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-1/2 flex justify-between items-center py-4">
-        <p>{convertDuration(trackProgress)}</p>
+        {/* <p>{convertDuration(trackProgress)}</p> */}
         <div className="w-full flex gap-8 justify-center items-center">
           <IconButton
             clickFunction={handleClick}
@@ -148,7 +148,7 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
             src="/icons/player-track-next.svg"
           />
         </div>
-        <p ref={timeRef}>0:00</p>
+        {/* <p ref={timeRef}>0:00</p> */}
       </div>
       <div className="seeker">
         <input
