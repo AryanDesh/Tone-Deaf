@@ -3,6 +3,7 @@ import IconButton from "./IconButton";
 import Hls from "hls.js";
 import { supabase } from "../utils/supe";
 import { Song } from "../types/songTypes";
+import { useAudioContext } from "../context";
 /*
   TODO:
   1. Add a way to like song and add to playlist
@@ -25,23 +26,49 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
   const timeRef = useRef<HTMLDivElement>(null)
   const seekRef = useRef<HTMLInputElement>(null)
   
+  // const {setCurrSong,songQueue} = useAudioContext();
   const getAudioFile = useCallback (async () => {
-    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${src.id}/${src.id}.m3u8`)
+    const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${src.id}/${src.id}.m3u8`);
+    console.log(data);
     setSongSrc(data.publicUrl) 
   }, [src])
   
   useEffect(() => {
-    getAudioFile()
-    const hls = new Hls();
-
-    if(Hls.isSupported()) {
-      hls.loadSource(songSrc) 
-      if(audioRef.current){
-        hls.attachMedia(audioRef.current);
-      }
+    getAudioFile();
+    if (!songSrc) return;
+  
+    const hls = new Hls({
+      maxBufferLength: 30, 
+      maxMaxBufferLength: 60, 
+      maxBufferHole: 0.1, 
+      maxLoadingDelay: 2, 
+      fragLoadingTimeOut: 4000,
+      startFragPrefetch: true,
+      lowLatencyMode: true,
+    });
+  
+    if (Hls.isSupported() && audioRef.current) {
+      hls.loadSource(songSrc);
+      hls.attachMedia(audioRef.current);
+      
+      hls.on(Hls.Events.FRAG_CHANGED, () => {
+        console.log("Fragment changed, resuming playback");
+        audioRef.current?.play();
+      });
+  
+      hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+        try {
+          await audioRef.current?.play();
+        } catch (err) {
+          console.log("Auto-play blocked", err);
+        }
+      });
     }
-  }, [songSrc, getAudioFile])
-
+  
+    return () => hls.destroy();
+  }, [songSrc, getAudioFile]);
+  
+  
   const convertDuration = (secs: number | undefined) => {
     if(secs) {
       const minutes = Math.floor(secs / 60);
@@ -116,6 +143,7 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
   }
   
   const playNext = () => {
+    // setCurrSong(songQueue[1]);
     console.log("Next")
   }
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,34 +161,34 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
       {/* Player Controls & Volume Control in Same Flex Container */}
       <div className="w-full grid grid-cols-[2fr_auto] items-center">
   {/* Player Controls + Timer */}
-  <div className="grid grid-cols-[auto_1fr_auto] items-center w-2/5 mx-auto">
-    <p>{convertDuration(trackProgress)}</p>
+        <div className="grid grid-cols-[auto_1fr_auto] items-center w-2/5 mx-auto">
+          <p>{convertDuration(trackProgress)}</p>
 
-    {/* Playback Controls */}
-    <div className="flex gap-8 justify-center">
-      <IconButton clickFunction={handleClick} src="/icons/player-track-prev.svg" />
-      <IconButton clickFunction={handleClick} src={playing ? "/icons/player-pause.svg" : "/icons/player-play.svg"} />
-      <IconButton clickFunction={playNext} src="/icons/player-track-next.svg" />
-    </div>
+          {/* Playback Controls */}
+          <div className="flex gap-8 justify-center">
+            <IconButton clickFunction={handleClick} src="/icons/player-track-prev.svg" />
+            <IconButton clickFunction={handleClick} src={playing ? "/icons/player-pause.svg" : "/icons/player-play.svg"} />
+            <IconButton clickFunction={playNext} src="/icons/player-track-next.svg" />
+          </div>
 
-    <p ref={timeRef}>0:00</p>
-  </div>
+          <p ref={timeRef}>0:00</p>
+        </div>
 
-  {/* Volume Control on the Right */}
-  <div className="grid grid-cols-[auto_auto_auto] items-center">
-    <span>🔉</span>
-    <input
-      type="range"
-      min={0}
-      max={1}
-      step={0.01}
-      value={volume}
-      onChange={handleVolumeChange}
-      className="w-16"
-    />
-    <span>🔊</span>
-  </div>
-</div>
+        {/* Volume Control on the Right */}
+        <div className="grid grid-cols-[auto_auto_auto] items-center">
+          <span>🔉</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={volume}
+            onChange={handleVolumeChange}
+            className="w-16"
+          />
+          <span>🔊</span>
+        </div>
+      </div>
 
       
     </div>
@@ -168,7 +196,7 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
     {/* Progress Bar */}
     <div className="absolute  bottom-0 w-7/12">
       <input type="range" ref={seekRef} min={0} max={sliderMax} value={0} onChange={handleChange} className="w-full" />
-      <audio ref={audioRef} className="w-2/5 mx-auto mt-20" onLoadedMetadata={handleLoadedMetadata} />
+      <audio ref={audioRef} className="w-2/5 mx-auto mt-20" onLoadedMetadata={handleLoadedMetadata} preload="auto"/>
     </div>
   </div>
   

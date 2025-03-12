@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import SongsPage from "./Songpage"
 import CollaborationPage from "./CollabPage"
 import { AudioContextProvider } from "../context"
 import Player from "../components/Player"
 import Header from "../components/Header"
 import SearchBar from "../components/SearchBar"
-import { Menu } from "../components"
+import { DotGrid } from "../components/DotGrid"
 
 export default function Pages() {
   const [activeTab, setActiveTab] = useState<"songs" | "collaborate">("songs")
@@ -16,6 +16,16 @@ export default function Pages() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const [showCollaborationModal, setShowCollaborationModal] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [])
 
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const toggleSearch = () => setSearchOpen(!searchOpen)
@@ -25,6 +35,7 @@ export default function Pages() {
   return (
     <AudioContextProvider>
       <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      {/* <DotGrid mousePosition={mousePosition} dotSpacing={15} interactionRadius={200} /> */}
         <Header
           activeTab={activeTab}
           setActiveTab={setActiveTab}

@@ -3,7 +3,8 @@ import { prisma } from "../db";
 
 const songRouter  = Router();
 
-// single song, req contains name of the song return uuid.
+// ToDOs: User Recent Songs, Recommended Songs. Both routes need to be authenticated.
+
 songRouter.post('/findsong', async(req, res) => {
     const songName = req.body.songName ;
     try{

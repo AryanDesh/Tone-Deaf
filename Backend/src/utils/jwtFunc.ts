@@ -18,7 +18,7 @@ export const verifyJwt = (token: string)  => {
     const decoded = jwt.verify(token, jwtPassword) as {id: string};
         return decoded;
 }
-function decodeJwt(token: string) {
+export function decodeJwt(token: string) {
     try {
         return jwt.decode(token) || false;
     } catch {

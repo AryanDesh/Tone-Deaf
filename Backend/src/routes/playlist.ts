@@ -6,10 +6,17 @@ playlistRouter.use(auth);
 
 playlistRouter.get('/all-playlist', async(req, res) => {
     try{
-        const allPlayList = await prisma.playlist.findMany();
+        const userId = req.userId;
+        console.log(userId);
+        const UsersPlaylist = await prisma.user.findUnique({
+            where : { id : userId},
+            include :{ playlists :true }
+        })
+        const allPlayList = UsersPlaylist!.playlists;
         res.json(allPlayList);
     }catch(e){
-        res.status(404).json({message: "no playlists"});
+        res.status(404).json({message: "error fetching playlists" , error : e});
+        
     }
 })
 
