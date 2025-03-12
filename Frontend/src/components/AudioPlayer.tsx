@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, FC } from "react";
 import IconButton from "./IconButton";
 import Hls from "hls.js";
 import { supabase } from "../utils/supe";
-
+import { Song } from "../types/songTypes";
 /*
   TODO:
   1. Add a way to like song and add to playlist
@@ -13,13 +13,17 @@ interface AudioPlayerProps {
   src: Song,
   setSrc: React.Dispatch<React.SetStateAction<Song>>
 }
-
-const AudioPlayer : FC<AudioPlayerProps> = ({ src }) => {
-  
+const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
 
   const audioRef = useRef<HTMLAudioElement>(null)
-  
   const [songSrc, setSongSrc] = useState('')
+  const [sliderMax, setSliderMax] = useState<number | undefined>(0);
+  const [trackProgress, setTrackProgress] = useState<number>(0);
+  const [playing, setPlaying] = useState<boolean>(false)
+  const [volume, setVolume] = useState(1); // Default volume (1 = 100%)
+  const playRef = useRef<number | null>(null)
+  const timeRef = useRef<HTMLDivElement>(null)
+  const seekRef = useRef<HTMLInputElement>(null)
   
   const getAudioFile = useCallback (async () => {
     const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${src.id}/${src.id}.m3u8`)
@@ -37,20 +41,6 @@ const AudioPlayer : FC<AudioPlayerProps> = ({ src }) => {
       }
     }
   }, [songSrc, getAudioFile])
-
-  
-  /** Handle the cube rotation when the slider is moved by pressing down and moving
-  */
-
-
-  const [sliderMax, setSliderMax] = useState<number | undefined>(0);
-  const [trackProgress, setTrackProgress] = useState<number>(0);
-  const [playing, setPlaying] = useState<boolean>(false)
-  const [volume, setVolume] = useState(1); // Default volume (1 = 100%)
-
-  const playRef = useRef<number | null>(null)
-  const timeRef = useRef<HTMLDivElement>(null)
-  const seekRef = useRef<HTMLInputElement>(null)
 
   const convertDuration = (secs: number | undefined) => {
     if(secs) {

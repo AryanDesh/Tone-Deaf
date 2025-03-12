@@ -1,7 +1,7 @@
-import axios, { AxiosResponse } from "axios"
+import axios from "axios"
 import { useEffect, useCallback } from "react"
-import { Side } from "../components"
 import { useAudioContext } from "../context"
+import { Song } from "../types/songTypes";
 
 const Playlists = () => {
   
@@ -9,9 +9,9 @@ const Playlists = () => {
   
   const fetchAllSongs = useCallback(async () => {
     const url = '/api/song/allsongs'
-    const response : AxiosResponse<Song[]> = await axios.get(url);
-    console.log(response.data)
-    setSongQueue(response.data)
+    const { data } = await axios.get<Song[]>(url); // Directly type the response
+    console.log(data)
+    setSongQueue(data)
   }, [setSongQueue])
   
   const setCurrentSong = (src: Song) => {
@@ -28,7 +28,7 @@ const Playlists = () => {
   */
 
   return (
-    <Side position={[-2, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+    // <Side position={[-2, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
       <div className="w-full h-full relative">
         {songQueue.map((val, key) => {
           return (
@@ -42,7 +42,7 @@ const Playlists = () => {
           );
         })}
       </div>
-    </Side>
+    // </Side>
   );
 }
 

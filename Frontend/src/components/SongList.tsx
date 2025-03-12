@@ -2,6 +2,7 @@ import type React from "react"
 import { Heart, Pause } from "lucide-react"
 import { useAudioContext } from "../context/"
 import type { Song } from "../types/songTypes"
+import { useCallback, useEffect } from "react"
 
 interface SongListProps {
   songs: Song[]
@@ -10,7 +11,6 @@ interface SongListProps {
 
 const SongList: React.FC<SongListProps> = ({ songs, playSong }) => {
   const { currSong, isPlaying, toggleLike } = useAudioContext()
-
   const formatDuration = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
@@ -60,7 +60,7 @@ const SongList: React.FC<SongListProps> = ({ songs, playSong }) => {
               </td>
               <td className="py-3 hidden md:table-cell text-gray-300">{song.artist}</td>
               <td className="py-3 hidden lg:table-cell text-gray-300">{song.album}</td>
-              <td className="py-3 text-right text-gray-400">{formatDuration(song.duration)}</td>
+              <td className="py-3 text-right text-gray-400">{formatDuration(song.duration || 0)}</td>
               <td className="py-3 text-right">
                 <button
                   onClick={(e) => {

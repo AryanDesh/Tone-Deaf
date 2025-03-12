@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { gsap } from "gsap"
 import { useAudioContext } from "../context"
 import SongList from "../components/SongList"
@@ -10,6 +10,7 @@ import RecommendedSongs from "../components/RecommendedSongs"
 import FriendsActivity from "../components/FriendsActivity"
 import PlaylistModal from "../components/PlaylistModal"
 import { mockSongs, mockPlaylists, mockFriends } from "../utils/mockData"
+import { Song } from "../types/songTypes"
 
 interface SongsPageProps {
   showPlaylistModal: boolean
@@ -18,6 +19,30 @@ interface SongsPageProps {
 
 const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylistModal }) => {
   const { currSong, setCurrSong, isPlaying, setIsPlaying, setSongQueue } = useAudioContext()
+  const [allSongs, setAllSongs] = useState<Song[]>([]);
+
+  const fetchAllSongs = useCallback(async () => {
+    const url = "http://localhost:5000/api/song/allsongs";
+  
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log(data);
+      
+      // Uncomment to update state
+      setSongQueue(data);
+      setAllSongs(data);
+  
+    } catch (error) {
+      console.error("Fetching songs failed:", error);
+    }
+  }, [setSongQueue]);
+  
 
   // Refs for animations
   const songListRef = useRef<HTMLDivElement>(null)
@@ -25,8 +50,9 @@ const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylist
   const friendsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setSongQueue(mockSongs);
-  
+    // setSongQueue(mockSongs);
+    console.log("Fetching songs..."); // Check if this logs
+    fetchAllSongs()
     const ctx = gsap.context(() => {
       if (songListRef.current) {
         gsap.from(songListRef.current, {
@@ -59,9 +85,9 @@ const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylist
     });
   
     return () => ctx.revert(); // Cleanup animations when component unmounts
-  }, [setSongQueue]);
+  }, []);
 
-  const playSong = (song: (typeof mockSongs)[0]) => {
+  const playSong = (song : Song) => {
     setCurrSong(song)
     setIsPlaying(true)
   }
@@ -69,7 +95,7 @@ const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylist
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div ref={songListRef}>
-        <SongList songs={mockSongs} playSong={playSong} />
+        <SongList songs={allSongs} playSong={playSong} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">

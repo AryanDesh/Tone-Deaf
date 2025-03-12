@@ -6,7 +6,7 @@ import { supabase } from "../utils/supe";
 import AudioPlayer from "./AudioPlayer";
 
 const Player: React.FC = () => {
-  const { currSong, isPlaying, togglePlay, toggleLike } = useAudioContext()
+  const { currSong, setCurrSong, isPlaying, togglePlay, toggleLike } = useAudioContext()
 
   if (!currSong) return null;
 
@@ -69,7 +69,7 @@ const Player: React.FC = () => {
         <div className="w-4/5 flex flex-col items-center z-10">
           <div className="w-full flex items-center space-x-6 mb-2">
             <div className="w-full h-full flex flex-col items-center justify-end py-10">
-              <AudioPlayer src={currSong}  />
+              <AudioPlayer src={currSong} setSrc={setCurrSong} />
             </div>
           </div>
         </div>

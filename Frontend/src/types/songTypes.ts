@@ -2,8 +2,8 @@ export interface Song {
     id: string
     title: string
     artist: string
-    album: string
-    duration: number
+    album: string | null
+    duration: number | null
     coverArt?: string
     liked?: boolean
     url?: string

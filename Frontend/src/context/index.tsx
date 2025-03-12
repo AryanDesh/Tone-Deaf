@@ -7,7 +7,7 @@ import type { Song } from "../types/songTypes"
 
 interface AudioContextType {
   currSong: Song | null
-  setCurrSong: React.Dispatch<React.SetStateAction<Song | null>>
+  setCurrSong: React.Dispatch<React.SetStateAction<Song>>
   isPlaying: boolean
   setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>
   songQueue: Song[]
@@ -19,7 +19,7 @@ interface AudioContextType {
 const AudioContext = createContext<AudioContextType | undefined>(undefined)
 
 export const AudioContextProvider = ({ children }: { children: ReactNode }) => {
-  const [currSong, setCurrSong] = useState<Song | null>({
+  const [currSong, setCurrSong] = useState<Song>({
     // const defaultSong : Song = {
       id: "cf6d246b-ece3-444f-80bd-65fd049ceb2e",
       artist: "Alan Walker",
