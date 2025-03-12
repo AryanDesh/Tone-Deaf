@@ -20,13 +20,13 @@ const AudioContext = createContext<AudioContextType | undefined>(undefined)
 
 export const AudioContextProvider = ({ children }: { children: ReactNode }) => {
   const [currSong, setCurrSong] = useState<Song | null>({
-    id: "1",
-    title: "Neon Horizon",
-    artist: "Cyber Pulse",
-    album: "Digital Dreams",
-    duration: 225,
-    coverArt: "/placeholder.svg?height=80&width=80",
-    liked: true,
+    // const defaultSong : Song = {
+      id: "cf6d246b-ece3-444f-80bd-65fd049ceb2e",
+      artist: "Alan Walker",
+      duration: 206,
+      title: "The Spectre",
+      album: "Unknown"
+    // }
   })
 
   const [isPlaying, setIsPlaying] = useState(false)

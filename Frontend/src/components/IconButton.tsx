@@ -3,7 +3,7 @@ const IconButton = ({ clickFunction, src } : {
   src: string
 }) => {
   return (
-    <button onClick={clickFunction}><img src={src} /></button>
+    <button className="min-w-8" onClick={clickFunction}><img src={src} /></button>
   )
 }
 

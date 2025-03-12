@@ -10,7 +10,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/main" element={<Pages />}/>
-            {/* <Route path="/songs" element={< />} /> */}
           </Routes>
         </BrowserRouter>
       </AudioContextProvider>
