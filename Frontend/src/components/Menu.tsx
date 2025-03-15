@@ -145,7 +145,7 @@ export default function Menu() {
                       TONES
                     </p>
                   </div>
-                  <div className="transition-transform duration-400 ease-[cubic-bezier(0.65,0.05,0,1)] hover:rotate-90">
+                  <div className="transition-transform duration-400 ease-\[cubic-bezier\(0.65,0.05,0,1\)\] hover:rotate-90">
                     <svg
                       ref={menuButtonIconRef}
                       xmlns="http://www.w3.org/2000/svg"

@@ -7,7 +7,7 @@ import { AudioContextProvider } from "../context"
 import Player from "../components/Player"
 import Header from "../components/Header"
 import SearchBar from "../components/SearchBar"
-import { DotGrid } from "../components/DotGrid"
+import { StarryBackground } from "../components/Background"
 
 export default function Pages() {
   const [activeTab, setActiveTab] = useState<"songs" | "collaborate">("songs")
@@ -35,7 +35,7 @@ export default function Pages() {
   return (
     <AudioContextProvider>
       <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-      {/* <DotGrid mousePosition={mousePosition} dotSpacing={15} interactionRadius={200} /> */}
+      <StarryBackground />
         <Header
           activeTab={activeTab}
           setActiveTab={setActiveTab}
