@@ -12,13 +12,21 @@ import PlaylistModal from "../components/PlaylistModal"
 import { mockSongs, mockPlaylists, mockFriends } from "../utils/mockData"
 import { Song } from "../types/songTypes"
 import { supabase } from "../utils/supe"
+import CollaborationModal from "../components/CollaborationModal"
 
 interface SongsPageProps {
   showPlaylistModal: boolean
   togglePlaylistModal: () => void
+  showCollaborationModal: boolean
+  toggleCollaborationModal: () => void
 }
 
-const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylistModal }) => {
+const SongsPage: React.FC<SongsPageProps> = ({
+  showPlaylistModal,
+  togglePlaylistModal,
+  showCollaborationModal,
+  toggleCollaborationModal,
+}) => {
   const { currSong, setCurrSong, isPlaying, setIsPlaying, setSongQueue } = useAudioContext()
   const [allSongs, setAllSongs] = useState<Song[]>([]);
   
@@ -133,7 +141,13 @@ const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylist
       </div>
 
       {showPlaylistModal && <PlaylistModal playlists={mockPlaylists} togglePlaylistModal={togglePlaylistModal} />}
+    
+      {showCollaborationModal && (
+        <CollaborationModal friends={mockFriends} toggleCollaborationModal={toggleCollaborationModal} />
+      )}
+    
     </div>
+
   )
 }
 

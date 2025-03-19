@@ -10,13 +10,21 @@ import ChatRoom from "../components/ChatRoom"
 import CollaborationModal from "../components/CollaborationModal"
 import { mockCollaborationSessions, mockPlaylists, mockFriends } from "../utils/mockData"
 import type { ChatMessage } from "../types/songTypes"
+import { PlaylistModal } from "../components"
 
 interface CollaborationPageProps {
   showCollaborationModal: boolean
   toggleCollaborationModal: () => void
+  showPlaylistModal: boolean
+  togglePlaylistModal: () => void
 }
 
-const CollaborationPage: React.FC<CollaborationPageProps> = ({ showCollaborationModal, toggleCollaborationModal }) => {
+const CollaborationPage: React.FC<CollaborationPageProps> = ({
+  showCollaborationModal,
+  toggleCollaborationModal,
+  showPlaylistModal,
+  togglePlaylistModal,
+})  => {
   const [activeChatSession, setActiveChatSession] = useState<string | null>(null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
 
@@ -108,6 +116,9 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({ showCollaboration
       {showCollaborationModal && (
         <CollaborationModal friends={mockFriends} toggleCollaborationModal={toggleCollaborationModal} />
       )}
+
+      {showPlaylistModal && <PlaylistModal playlists={mockPlaylists} togglePlaylistModal={togglePlaylistModal} />}
+
     </div>
   )
 }

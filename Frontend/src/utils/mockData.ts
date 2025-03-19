@@ -7,7 +7,6 @@ export const mockSongs: Song[] = [
     artist: "Cyber Pulse",
     album: "Digital Dreams",
     duration: 225,
-    coverArt: "/placeholder.svg?height=80&width=80",
     liked: true,
   },
   {
@@ -16,7 +15,6 @@ export const mockSongs: Song[] = [
     artist: "Electron Wave",
     album: "Future State",
     duration: 252,
-    coverArt: "/placeholder.svg?height=80&width=80",
     liked: false,
   },
   {
@@ -25,7 +23,6 @@ export const mockSongs: Song[] = [
     artist: "Cosmic Drift",
     album: "Interstellar",
     duration: 238,
-    coverArt: "/placeholder.svg?height=80&width=80",
     liked: true,
   },
   {
@@ -34,7 +31,6 @@ export const mockSongs: Song[] = [
     artist: "Binary Echo",
     album: "Code Sequence",
     duration: 202,
-    coverArt: "/placeholder.svg?height=80&width=80",
     liked: false,
   },
 ]

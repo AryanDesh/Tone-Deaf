@@ -11,11 +11,12 @@ type MenuItem = {
 
 // Menu items data
 const menuItems: MenuItem[] = [
-  { title: "About us", url: "#", number: "01" },
-  { title: "Our work", url: "#", number: "02" },
-  { title: "Services", url: "#", number: "03" },
-  { title: "Blog", url: "#", number: "04" },
-  { title: "Contact us", url: "#", number: "05" },
+  { title: "songs", url: "#", number: "01" },
+  { title: "collaborate", url: "/PlayList", number: "02" },
+  { title: "friends", url: "#", number: "03" },
+  { title: "playlists", url: "#", number: "04" },
+  { title: "about", url: "#", number: "05" },
+  { title: "contact" , url: "#", number: "06"}
 ]
 
 // Social links data
@@ -26,7 +27,12 @@ const socialLinks = [
   { title: "Awwwards", url: "#" },
 ]
 
-export default function Menu() {
+interface MenuProps {
+  activePage: string
+  setActivePage: (page: string) => void
+}
+
+const Menu: React.FC<MenuProps> = ({ activePage, setActivePage }) => {
   const navRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -218,7 +224,11 @@ export default function Menu() {
                   <li key={index} className="relative overflow-hidden md:h-auto">
                     <a
                       ref={(el) => (menuLinksRef.current[index] = el as HTMLAnchorElement)}
-                      href={item.url}
+                      href='#'
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setActivePage(item.title);
+                      }}
                       className="py-3 pl-4 md:pl-8 w-full text-decoration-none flex group relative"
                     >
                       {/* Background overlay effect */}
@@ -268,3 +278,5 @@ export default function Menu() {
     </>
   )
 }
+
+export default Menu;

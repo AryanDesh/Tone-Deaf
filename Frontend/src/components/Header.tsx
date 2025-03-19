@@ -3,8 +3,8 @@ import { Music, Users, Search, Share2, List } from "lucide-react"
 import Menu from "./Menu"
 
 interface HeaderProps {
-  activeTab: "songs" | "collaborate"
-  setActiveTab: (tab: "songs" | "collaborate") => void
+  activePage: string
+  setActivePage: (page: string) => void
   toggleMenu: () => void
   toggleSearch: () => void
   togglePlaylistModal: () => void
@@ -12,8 +12,8 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
-  activeTab,
-  setActiveTab,
+  activePage,
+  setActivePage,
   toggleMenu,
   toggleSearch,
   togglePlaylistModal,
@@ -24,14 +24,14 @@ const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
-           <Menu></Menu>
+           <Menu activePage={activePage} setActivePage={setActivePage}></Menu>
           </div>
 
           <nav className="hidden md:flex space-x-4">
             <button
-              onClick={() => setActiveTab("songs")}
+              onClick={() => setActivePage("songs")}
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
-                activeTab === "songs" ? "bg-purple-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                activePage === "songs" ? "bg-purple-600 text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white"
               }`}
             >
               <Music className="mr-2" size={18} />
@@ -39,9 +39,9 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab("collaborate")}
+              onClick={() => setActivePage("collaborate")}
               className={`px-3 py-2 rounded-md text-sm font-medium flex items-center ${
-                activeTab === "collaborate"
+                activePage === "collaborate"
                   ? "bg-purple-600 text-white"
                   : "text-gray-300 hover:bg-gray-700 hover:text-white"
               }`}
