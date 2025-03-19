@@ -14,6 +14,8 @@ interface AudioContextType {
   setSongQueue: React.Dispatch<React.SetStateAction<Song[]>>
   togglePlay: () => void
   toggleLike: (id: string) => void
+  coverArt : string | null
+  setCoverArt : React.Dispatch<React.SetStateAction<string>> 
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined)
@@ -25,12 +27,13 @@ export const AudioContextProvider = ({ children }: { children: ReactNode }) => {
       artist: "Alan Walker",
       duration: 206,
       title: "The Spectre",
-      album: "Unknown"
+      album: "Unknown",
     // }
   })
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [songQueue, setSongQueue] = useState<Song[]>([])
+  const [coverArt, setCoverArt] = useState<string>( `${currSong.id}.jpg` )
 
   const togglePlay = () => setIsPlaying(!isPlaying)
 
@@ -54,6 +57,8 @@ export const AudioContextProvider = ({ children }: { children: ReactNode }) => {
         setSongQueue,
         togglePlay,
         toggleLike,
+        coverArt,
+        setCoverArt
       }}
     >
       {children}

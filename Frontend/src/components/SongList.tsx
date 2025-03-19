@@ -2,8 +2,6 @@ import type React from "react"
 import { Heart, Pause } from "lucide-react"
 import { useAudioContext } from "../context/"
 import type { Song } from "../types/songTypes"
-import { useCallback, useEffect } from "react"
-
 interface SongListProps {
   songs: Song[]
   playSong: (song: Song) => void
@@ -16,6 +14,7 @@ const SongList: React.FC<SongListProps> = ({ songs, playSong }) => {
     const remainingSeconds = seconds % 60
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
   }
+
 
   return (
     <div className="bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-lg p-6">
@@ -43,7 +42,7 @@ const SongList: React.FC<SongListProps> = ({ songs, playSong }) => {
                 <div className="flex items-center">
                   <div className="relative w-10 h-10 mr-3 rounded overflow-hidden">
                     <img
-                      src={song.coverArt || "/placeholder.svg?height=40&width=40"}
+                      src={song.coverArt? URL.createObjectURL(song.coverArt) : "/placeholder.svg?height=40&width=40"}
                       alt={song.title}
                       width={40}
                       height={40}

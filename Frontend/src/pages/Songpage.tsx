@@ -11,6 +11,7 @@ import FriendsActivity from "../components/FriendsActivity"
 import PlaylistModal from "../components/PlaylistModal"
 import { mockSongs, mockPlaylists, mockFriends } from "../utils/mockData"
 import { Song } from "../types/songTypes"
+import { supabase } from "../utils/supe"
 
 interface SongsPageProps {
   showPlaylistModal: boolean
@@ -20,13 +21,34 @@ interface SongsPageProps {
 const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylistModal }) => {
   const { currSong, setCurrSong, isPlaying, setIsPlaying, setSongQueue } = useAudioContext()
   const [allSongs, setAllSongs] = useState<Song[]>([]);
+  
+  const getImages = async (songs: Song[]) => {
+    const updatedSongs = await Promise.all(
+      songs.map(async (song) => {
+        const { data } = supabase.storage.from("Songs-Chunks").getPublicUrl(`${song.id}/${song.id}.jpg`);
 
+        try {
+          const response = await fetch(data.publicUrl);
+          if (!response.ok) throw new Error("Failed to fetch cover image");
+
+          const blob = await response.blob();
+          return { ...song, coverArt: blob }; 
+        } catch (error) {
+          console.error(`Failed to load cover art for ${song.title}:`, error);
+          return song; 
+        }
+      })
+    );
+    
+    setAllSongs(updatedSongs);
+    setSongQueue(updatedSongs);
+  }
   const fetchAllSongs = useCallback(async () => {
     const url = "http://localhost:5000/api/song/allsongs";
   
     try {
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -37,6 +59,8 @@ const SongsPage: React.FC<SongsPageProps> = ({ showPlaylistModal, togglePlaylist
       // Uncomment to update state
       setSongQueue(data);
       setAllSongs(data);
+
+      getImages(data);
   
     } catch (error) {
       console.error("Fetching songs failed:", error);

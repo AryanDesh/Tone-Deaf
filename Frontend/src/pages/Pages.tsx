@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import SongsPage from "./Songpage"
 import CollaborationPage from "./CollabPage"
@@ -7,7 +5,7 @@ import { AudioContextProvider } from "../context"
 import Player from "../components/Player"
 import Header from "../components/Header"
 import SearchBar from "../components/SearchBar"
-import { StarryBackground } from "../components/Background"
+import StarryBackground from "../components/Background"
 
 export default function Pages() {
   const [activeTab, setActiveTab] = useState<"songs" | "collaborate">("songs")

@@ -4,7 +4,7 @@ export interface Song {
     artist: string
     album: string | null
     duration: number | null
-    coverArt?: string
+    coverArt?: Blob
     liked?: boolean
     url?: string
   }
