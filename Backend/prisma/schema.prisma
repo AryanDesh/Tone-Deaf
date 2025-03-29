@@ -12,17 +12,39 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-
 model User {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username  String  @default("")
-  password  String     
-  email     String     @unique
-  playlists Playlist[] 
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username   String   @default("")
+  password   String
+  email      String   @unique
+  playlists  Playlist[]
   streamLogs StreamLog[]
-  likedId   Int?       
+  likedId    Int?
+  following Friendship[] @relation("Following") 
+  followers Friendship[] @relation("Follower")
 }
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+model Friendship {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  followingId    String   @db.Uuid
+  followerId   String   @db.Uuid
+  following      User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower      User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  status     FriendshipStatus @default(PENDING)
+  created_at DateTime @default(now())
+  @@unique([followingId, followerId])
+  @@index([followingId])
+  @@index([followerId])
+}
+
+
+
 model Song {
   id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title     String
@@ -32,8 +54,6 @@ model Song {
   tags      TagsOnSongs[]
   streamLog StreamLog[]
   PlaylistSong PlaylistSong[]
-  Playlist Playlist[] @relation("PlaylistSongs")
-
   @@unique([title , artist])
 }
 
@@ -43,12 +63,11 @@ model Tag {
   Song      TagsOnSongs[] 
 }
 
-// Relation Table to showcase m-n relationship between Tag and Song Table.
 model TagsOnSongs {
   songId  String  @db.Uuid
-  song    Song  @relation(fields: [songId], references: [id])
+  song    Song  @relation(fields: [songId], references: [id], onDelete: Cascade)
   tagId   Int
-  tag     Tag   @relation(fields: [tagId], references: [id])
+  tag     Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
   assignedAt DateTime @default(now())
 
   @@id([songId, tagId])
@@ -58,27 +77,23 @@ model Playlist {
   id     Int        @id @default(autoincrement())
   name   String
   userId String  @db.Uuid
-  user   User       @relation(fields: [userId], references: [id]) 
-  songs  Song[] @relation("PlaylistSongs") 
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade) 
   PlaylistSong PlaylistSong[]
 }
 
 model PlaylistSong {
   playlistId Int
-  SongId String @db.Uuid
-  playlist   Playlist @relation(fields: [playlistId], references: [id])
-  Song   Song @relation(fields: [SongId], references: [id])
-
-  @@id([playlistId, SongId]) 
+  songId String @db.Uuid
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  song   Song @relation(fields: [songId], references: [id])
+  @@id([playlistId, songId]) 
 }
-
 
 model StreamLog {
   id        Int      @id @default(autoincrement())
-  userId    String?  @db.Uuid
-  user      User?    @relation(fields: [userId], references: [id])
+  userId    String  @db.Uuid
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   songId    String  @db.Uuid
   song      Song     @relation(fields: [songId], references: [id])
   streamedAt DateTime @default(now())
-  ipAddress String?
 }

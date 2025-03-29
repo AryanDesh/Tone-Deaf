@@ -27,7 +27,8 @@ playlistRouter.get('/:playlistId', async (req, res) => {
         const playlist = await prisma.playlist.findUnique({
             where: { id: parseInt(playlistId) }, 
             include: {
-                songs: true 
+                PlaylistSong: { select: { songId : true, song: true } },
+
             }
         });
 
@@ -39,7 +40,7 @@ playlistRouter.get('/:playlistId', async (req, res) => {
         res.status(200).json({
             playlistId: playlist.id,
             playlistName: playlist.name,
-            songs: playlist.songs,
+            songs: playlist.PlaylistSong,
         });
     } catch (error) {
         console.error(error);
@@ -74,7 +75,7 @@ playlistRouter.post('/:playlistId/add-song', async (req, res) => {
         await prisma.playlistSong.create({
             data: {
                 playlistId: parseInt(playlistId),
-                SongId: songId,
+                songId: songId,
             },
         });
 
@@ -92,9 +93,9 @@ playlistRouter.delete('/:playlistId/remove-song', async (req, res) => {
     try {
         await prisma.playlistSong.delete({
             where: {
-                playlistId_SongId: {
+                playlistId_songId: {
                     playlistId: parseInt(playlistId),
-                    SongId: songId,
+                    songId: songId,
                 },
             },
         });
@@ -119,9 +120,9 @@ playlistRouter.post('/like', async (req, res) => {
     try {
         await prisma.playlistSong.delete({
             where: {
-                playlistId_SongId: {
+                playlistId_songId: {
                     playlistId: user.likedId,
-                    SongId: songId,
+                    songId: songId,
                 },
             },
         });
@@ -145,9 +146,9 @@ playlistRouter.post('/dislike', async (req, res) => {
     try {
         await prisma.playlistSong.delete({
             where: {
-                playlistId_SongId: {
+                playlistId_songId: {
                     playlistId: user.likedId,
-                    SongId: songId,
+                    songId: songId,
                 },
             },
         });

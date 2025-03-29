@@ -17,7 +17,7 @@
   "description": "",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.723.0",
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "^6.5.0",
     "@supabase/supabase-js": "^2.47.10",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.8",
@@ -42,6 +42,6 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "prisma": "^6.2.1"
+    "prisma": "^6.5.0"
   }
 }
