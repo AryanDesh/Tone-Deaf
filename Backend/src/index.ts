@@ -1,16 +1,11 @@
 import express  from "express";
 import cors from 'cors';
 import dotenv from 'dotenv'
-import chunkRouter from "./routes/chunks";
 import cookieParser from 'cookie-parser'
-import loginRouter from "./routes/login";
-import signupRouter from "./routes/signup";
-import songRouter from "./routes/songs";
-import userRouter from "./routes/user";
-import playlistRouter from "./routes/playlist";
 import { createServer } from 'node:http';
 import {Server} from "socket.io";
 import { sockets } from "./utils/collab";
+import { chunkRouter, signupRouter, loginRouter, userRouter, songRouter, playlistRouter, friendRouter } from "./routes";
 
 dotenv.config();
 
@@ -32,6 +27,8 @@ app.use('/api/login', loginRouter);
 app.use('/api/user', userRouter);
 app.use('/api/song', songRouter);
 app.use('/api/user/playlist', playlistRouter);
+app.use('/api/user/friend', friendRouter);
+
 
 export const server = createServer(app); 
 

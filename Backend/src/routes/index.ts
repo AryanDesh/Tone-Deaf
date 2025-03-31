@@ -1,0 +1,7 @@
+export {default as chunkRouter}from './chunks'
+export {default as friendRouter} from './friends'
+export {default as loginRouter} from './login'
+export {default as playlistRouter} from './playlist'
+export {default as signupRouter} from './signup'
+export {default as songRouter} from './songs'
+export {default as userRouter} from './user'

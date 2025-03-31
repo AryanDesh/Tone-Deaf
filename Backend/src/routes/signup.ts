@@ -1,9 +1,8 @@
-import { application, Router } from "express";
+import { Router } from "express";
 import { prisma } from "../db";
 import bcrypt from 'bcrypt';
 import { generateAccessToken} from "../utils/jwtFunc";
 import z from 'zod'
-import { Playlist } from "@prisma/client";
 const signupRouter = Router();
 
 const UserSchema = z.object({
