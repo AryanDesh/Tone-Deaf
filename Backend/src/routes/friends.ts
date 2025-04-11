@@ -171,7 +171,7 @@ friendRouter.post("/unblock/:friendId", async (req, res) => {
 });
 
 // Get Friend List
-friendRouter.get("/list", async (req, res) => {
+friendRouter.get("/", async (req, res) => {
   const userId = req.userId;
 
   try {
@@ -199,5 +199,77 @@ friendRouter.get("/list", async (req, res) => {
     res.status(500).json({ error: "Error retrieving friends list." });
   }
 });
+
+friendRouter.get("/suggested", async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401).json({ message: "Unauthorized. Please log in." });
+    return 
+  }
+
+  try {
+    // Fetch existing friendships (Accepted, Pending, Blocked)
+    const existingRelationships = await prisma.friendship.findMany({
+      where: {
+        OR: [
+          { followingId: userId },
+          { followerId: userId }
+        ],
+      },
+      select: {
+        followingId: true,
+        followerId: true,
+        status: true
+      }
+    });
+
+    // Extract already known friend IDs
+    const blockedOrFriends = new Set(
+      existingRelationships.flatMap(({ followingId, followerId, status }) =>
+        status === "BLOCKED" || status === "ACCEPTED" || status === "PENDING"
+          ? [followingId, followerId]
+          : []
+      )
+    );
+    blockedOrFriends.add(userId); // Exclude self
+
+    // Fetch users who are not in the blocked/friend list
+    const potentialFriends = await prisma.user.findMany({
+      where: { id: { notIn: Array.from(blockedOrFriends) } },
+      select: { id: true, username: true, email: true}
+    });
+
+    // Fetch mutual friend count for each potential friend
+    const suggestedFriends = await Promise.all(
+      potentialFriends.map(async (user) => {
+        const mutualCount = await prisma.friendship.count({
+          where: {
+            status: "ACCEPTED",
+            OR: [
+              {
+                followingId: userId,
+                followerId: user.id,
+              },
+              {
+                followingId: user.id,
+                followerId: userId,
+              },
+            ],
+          },
+        });
+
+        return { ...user, mutualFriends: mutualCount };
+      })
+    );
+
+    suggestedFriends.sort((a, b) => b.mutualFriends - a.mutualFriends);
+    console.log(suggestedFriends);
+    res.json({ suggestedFriends });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error retrieving suggested friends." });
+  }
+});
+
 
 export default friendRouter;

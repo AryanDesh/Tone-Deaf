@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import {Server} from "socket.io";
 import { sockets } from "./utils/collab";
 import { chunkRouter, signupRouter, loginRouter, userRouter, songRouter, playlistRouter, friendRouter } from "./routes";
+import { verifyJwt } from "./utils/jwtFunc";
 
 dotenv.config();
 
@@ -27,7 +28,23 @@ app.use('/api/login', loginRouter);
 app.use('/api/user', userRouter);
 app.use('/api/song', songRouter);
 app.use('/api/user/playlist', playlistRouter);
-app.use('/api/user/friend', friendRouter);
+app.use('/api/friends/', friendRouter);
+app.get('/api/me' , async(req, res) => {
+  const token = req.cookies.accessToken;
+
+  if (!token) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+  try {
+    const decoded = verifyJwt(token);
+    res.json({ user: decoded.id });
+
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+
+})
 
 
 export const server = createServer(app); 
