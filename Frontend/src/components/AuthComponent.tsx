@@ -4,6 +4,8 @@ import type React from "react"
 import { useState, useRef } from "react"
 import "../styles/card.css"
 import axios from "axios";
+import { useNavigate } from "react-router";
+
 
 const AuthComponent: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(true)
@@ -11,10 +13,11 @@ const AuthComponent: React.FC = () => {
   const passconfRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
 
   const SignIn = async (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent form submission from reloading the page
+    event.preventDefault(); 1
   
     if (!emailRef.current || !passRef.current) return;
   
@@ -30,6 +33,8 @@ const AuthComponent: React.FC = () => {
   
       //@ts-ignore
       alert(response.data?.message); 
+
+      navigate("/main");
     } catch (error: any) {
       if (error.response) {
         alert(error.response.data.message); // Show error message from backend
@@ -40,7 +45,7 @@ const AuthComponent: React.FC = () => {
   }
     
   const SignUp = async (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent form submission from reloading the page
+    event.preventDefault(); 
   
     if (!emailRef.current || !passRef.current || !passconfRef.current || !nameRef.current ) return;
 
@@ -58,9 +63,11 @@ const AuthComponent: React.FC = () => {
   
       //@ts-ignore
       alert(response.data?.message); 
+      navigate("/main");
+
     } catch (error: any) {
       if (error.response) {
-        alert(error.response.data); // Show error message from backend
+        alert(error.response.data); 
       } else {
         alert("An error occurred while signing up");
       }

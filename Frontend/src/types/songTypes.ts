@@ -20,13 +20,14 @@ export interface Song {
   
   export interface Friend {
     id: string
-    name: string
+    username: string
     avatar: string
-    online: boolean
+    online?: boolean
     currentlyPlaying?: {
       song: string
       artist: string
     }
+    mutualFriends? : number
   }
   
   export interface CollaborationSession {

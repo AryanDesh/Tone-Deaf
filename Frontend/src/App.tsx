@@ -1,6 +1,7 @@
 import { Routes, BrowserRouter, Route } from "react-router"
-import { Homepage, Songpage } from "./pages"
+import { Homepage } from "./pages"
 import { AudioContextProvider } from "./context"
+import { ProtectedRoute } from "./components"
 import Pages from "./pages/Pages"
 function App() {
   return (
@@ -9,7 +10,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Homepage />} />
-            <Route path="/main" element={<Pages />}/>
+            <Route path="/main" element={<ProtectedRoute ><Pages /></ProtectedRoute>}/>
           </Routes>
         </BrowserRouter>
       </AudioContextProvider>

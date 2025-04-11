@@ -46,7 +46,7 @@ export const mockPlaylists: Playlist[] = [
 export const mockFriends: Friend[] = [
   {
     id: "1",
-    name: "Alex",
+    username: "Alex",
     avatar: "/placeholder.svg?height=40&width=40",
     online: true,
     currentlyPlaying: {
@@ -56,17 +56,24 @@ export const mockFriends: Friend[] = [
   },
   {
     id: "2",
-    name: "Jordan",
+    username: "Jordan",
     avatar: "/placeholder.svg?height=40&width=40",
     online: true,
   },
   {
     id: "3",
-    name: "Taylor",
+    username: "Taylor",
     avatar: "/placeholder.svg?height=40&width=40",
     online: false,
   },
 ]
+
+export const mockFriendSuggestions : Friend[]= [
+  { id: "4", username: "Emma", avatar: "/placeholder.svg?height=80&width=80", mutualFriends: 3, online: false },
+  { id: "5", username: "Michael", avatar: "/placeholder.svg?height=80&width=80", mutualFriends: 2 , online: true},
+  { id: "6", username: "Sophia", avatar: "/placeholder.svg?height=80&width=80", mutualFriends: 5 , online : false},
+]
+
 
 export const mockCollaborationSessions: CollaborationSession[] = [
   { id: "1", name: "Weekend Party Mix", participants: 3, active: true, createdBy: "Alex" },
