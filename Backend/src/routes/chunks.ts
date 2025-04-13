@@ -98,6 +98,7 @@ const chunking = async (
     imagePath: string
 ) => {
     const exec = promisify(execCallback);
+    console.log("In chunking");
 
     const tempFolder = path.join(__dirname, "../..", `./temp_chunks_${songId}`);
     if (!fs.existsSync(tempFolder)) {

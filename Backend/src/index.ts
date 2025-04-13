@@ -1,9 +1,11 @@
-import express  from "express";
+import express from "express";
 import cors from 'cors';
-import dotenv from 'dotenv'
-import cookieParser from 'cookie-parser'
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import { createServer } from 'node:http';
-import {Server} from "socket.io";
+import { Server } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import createClient from "ioredis"; // use node-redis, not ioredis
 import { sockets } from "./utils/collab";
 import { chunkRouter, signupRouter, loginRouter, userRouter, songRouter, playlistRouter, friendRouter } from "./routes";
 import { verifyJwt } from "./utils/jwtFunc";
@@ -11,27 +13,28 @@ import { verifyJwt } from "./utils/jwtFunc";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000 ;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: "http://localhost:5173",
-  credentials: true 
+  credentials: true
 }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-app.use('/api/chunks',  chunkRouter);
+// Your routes
+app.use('/api/chunks', chunkRouter);
 app.use('/api/signup', signupRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/user', userRouter);
 app.use('/api/song', songRouter);
 app.use('/api/user/playlist', playlistRouter);
 app.use('/api/friends/', friendRouter);
-app.get('/api/me' , async(req, res) => {
-  const token = req.cookies.accessToken;
 
+// Auth check
+app.get('/api/me', async (req, res) => {
+  const token = req.cookies.accessToken;
   if (!token) {
     res.status(401).json({ message: "Unauthorized" });
     return;
@@ -39,23 +42,56 @@ app.get('/api/me' , async(req, res) => {
   try {
     const decoded = verifyJwt(token);
     res.json({ user: decoded.id });
-
   } catch (error) {
     res.status(401).json({ message: "Invalid token" });
   }
+});
 
-})
-
-
-export const server = createServer(app); 
+export const server = createServer(app);
 
 export const io = new Server(server, {
-    connectionStateRecovery: {},
-    cors : {
-      origin : "http://localhost:5173"
-    }
-})
+  connectionStateRecovery: {},
+  cors: {
+    origin: "http://localhost:5173"
+  }
+});
+io.use(async (socket, next) => {
+  const token = socket.request.headers.cookie?.split('=')[1]; 
+  if (!token) {
+    return next(new Error("Authentication error: No token provided"));
+  }
 
-sockets();
+  try {
+    const decoded = verifyJwt(token); 
+    socket.userId = decoded.id;  
+    next(); 
+  } catch (error) {
+    return next(new Error("Authentication error: Invalid token"));
+  }
+});
 
-server.listen(PORT , () => console.log("Running on Port : ", PORT));
+export let pubClient: createClient | null = null;
+let subClient: createClient | null = null;
+
+async function setupSocketServer() {
+  pubClient = new createClient(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+  subClient = pubClient.duplicate();
+  
+  pubClient.on('ready', () => {
+    console.log('✅ Redis pubClient connected');
+    console.log(pubClient?.status);
+    io.adapter(createAdapter(pubClient, subClient));
+    sockets();
+  });
+  
+  pubClient.on('error', (err) => console.error('Redis Client Error:', err));
+  
+  subClient.on('ready', () => {
+    console.log('✅ Redis subClient connected');
+  });
+}
+setupSocketServer();
+
+server.listen(PORT, () => {
+  console.log("Running on Port:", PORT);
+});

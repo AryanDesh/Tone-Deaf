@@ -22,6 +22,9 @@ model User {
   likedId    Int?
   following Friendship[] @relation("Following") 
   followers Friendship[] @relation("Follower")
+  rooms     UserInRoom[]
+
+  host     Room[]
 }
 
 enum FriendshipStatus {
@@ -78,7 +81,9 @@ model Playlist {
   name   String
   userId String  @db.Uuid
   user   User       @relation(fields: [userId], references: [id], onDelete: Cascade) 
-  PlaylistSong PlaylistSong[]
+  shared Boolean @default(false)
+  playlistSong PlaylistSong[]
+  sharedPlaylist  SharedPlaylist?
 }
 
 model PlaylistSong {
@@ -96,4 +101,34 @@ model StreamLog {
   songId    String  @db.Uuid
   song      Song     @relation(fields: [songId], references: [id])
   streamedAt DateTime @default(now())
+}
+
+model UserInRoom {
+  id        Int      @id @default(autoincrement())
+  roomId    String   @db.Uuid
+  userId    String   @db.Uuid
+  joinedAt  DateTime @default(now())
+
+  room      Room     @relation(fields: [roomId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId])
+}
+
+model Room {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  socketId   String @unique
+  hostId    String @db.Uuid
+  host      User  @relation(fields: [hostId], references: [id])
+  users     UserInRoom[]
+  sharedPlaylist  SharedPlaylist[]
+}
+
+model SharedPlaylist{
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomId    String @db.Uuid
+  room      Room @relation(fields: [roomId], references: [id])
+  playlistId  Int @unique
+  playlist    Playlist  @relation(fields: [playlistId], references: [id])
 }
