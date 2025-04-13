@@ -4,9 +4,13 @@ import { randomUUID } from "node:crypto";
 
 export const sockets = () => {
   io.of('/collab').on('connection', (socket) => {
-    const userId = socket.userId;
-    if (!userId) return;
+    console.log("🔥 Connected to /collab");
 
+    const userId = socket.userId;
+    if (!userId) {
+      console.log("❌ Missing userId on socket!");
+      return;
+    }
     console.log(`User connected: ${socket.id} (${userId})`);
 
     const presenceKey = `presence:user:${userId}`;
@@ -21,7 +25,7 @@ export const sockets = () => {
     // Refresh TTL every 20 seconds
     const interval = setInterval(setPresence, 20000);
 
-    socket.on("create-room", async ({ name }) => {
+    socket.on("create-room", async ( name ) => {
       const roomId = randomUUID();
       socket.join(roomId);
       console.log(`Room created: ${roomId} by user: ${userId}`);
@@ -41,6 +45,7 @@ export const sockets = () => {
         },
       });
 
+      console.log(`${userId} has created room ${roomId}`)
       socket.emit("room-created", roomId);
     });
 

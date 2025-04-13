@@ -52,20 +52,25 @@ export const server = createServer(app);
 export const io = new Server(server, {
   connectionStateRecovery: {},
   cors: {
-    origin: "http://localhost:5173"
+    origin: "http://localhost:5173/"
   }
 });
-io.use(async (socket, next) => {
-  const token = socket.request.headers.cookie?.split('=')[1]; 
+io.of("/collab").use((socket, next) => {
+  const rawCookie = socket.request.headers.cookie;
+  const token = rawCookie?.split('=')[1]; 
+
   if (!token) {
+    console.log("❌ No token found in cookies");
     return next(new Error("Authentication error: No token provided"));
   }
 
   try {
-    const decoded = verifyJwt(token); 
-    socket.userId = decoded.id;  
-    next(); 
-  } catch (error) {
+    const decoded = verifyJwt(token);
+    socket.userId = decoded.id;
+    console.log(`✅ Socket auth successful for user ${decoded.id}`);
+    next();
+  } catch (err) {
+    console.error("❌ JWT verification failed:", err);
     return next(new Error("Authentication error: Invalid token"));
   }
 });
