@@ -9,6 +9,7 @@ import createClient from "ioredis"; // use node-redis, not ioredis
 import { sockets } from "./utils/collab";
 import { chunkRouter, signupRouter, loginRouter, userRouter, songRouter, playlistRouter, friendRouter } from "./routes";
 import { verifyJwt } from "./utils/jwtFunc";
+import { parse as parseCookie } from "cookie"; 
 
 dotenv.config();
 
@@ -57,10 +58,16 @@ export const io = new Server(server, {
 });
 io.of("/collab").use((socket, next) => {
   const rawCookie = socket.request.headers.cookie;
-  const token = rawCookie?.split('=')[1]; 
+  if (!rawCookie) {
+    console.log("❌ No cookie header present");
+    return next(new Error("Authentication error: No cookie provided"));
+  }
+
+  const cookies = parseCookie(rawCookie); // Safe parse
+  const token = cookies.accessToken; // Retrieve the accessToken
 
   if (!token) {
-    console.log("❌ No token found in cookies");
+    console.log("❌ No accessToken found in parsed cookies");
     return next(new Error("Authentication error: No token provided"));
   }
 

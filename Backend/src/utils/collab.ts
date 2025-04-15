@@ -4,108 +4,90 @@ import { randomUUID } from "node:crypto";
 
 export const sockets = () => {
   io.of('/collab').on('connection', (socket) => {
-    console.log("🔥 Connected to /collab");
+    console.log(`🔥 /collab connect: socket=${socket.id} user=${socket.userId}`);
 
-    const userId = socket.userId;
-    if (!userId) {
-      console.log("❌ Missing userId on socket!");
-      return;
-    }
-    console.log(`User connected: ${socket.id} (${userId})`);
-
+    const userId = socket.userId!;
     const presenceKey = `presence:user:${userId}`;
 
+    // Presence TTL heartbeat
     const setPresence = async () => {
       await pubClient!.set(presenceKey, 'online', 'EX', 60);
     };
-
-    // Initial set
     setPresence();
+    const heartbeat = setInterval(setPresence, 20000);
 
-    // Refresh TTL every 20 seconds
-    const interval = setInterval(setPresence, 20000);
-
-    socket.on("create-room", async ( name ) => {
-      const roomId = randomUUID();
-      socket.join(roomId);
-      console.log(`Room created: ${roomId} by user: ${userId}`);
+    // CREATE ROOM
+    socket.on("create-room", async (name: string) => {
+      const code = randomUUID();
+      socket.join(code);
 
       const room = await prisma.room.create({
-        data: {
-          name,
-          socketId: roomId,
-          hostId: userId,
-        },
+        data: { name, code, hostId: userId },
       });
 
       await prisma.userInRoom.create({
-        data: {
-          roomId: room.id,
-          userId,
-        },
+        data: { roomId: room.id, userId },
       });
 
-      console.log(`${userId} has created room ${roomId}`)
-      socket.emit("room-created", roomId);
+      console.log(`Room created: id=${room.id} code=${code} by user=${userId}`);
+      socket.emit("room-created", code );
     });
 
-    socket.on("join-room", async ({ roomId }) => {
-      socket.join(roomId);
-      console.log(`User ${userId} joined room ${roomId}`);
+    // JOIN ROOM
+    socket.on("join-room", async (code: string) => {
+      socket.join(code);  
 
-      const existingUserInRoom = await prisma.userInRoom.findUnique({
-        where: {
-          roomId_userId: {
-            roomId,
-            userId,
-          },
-        },
+      const room = await prisma.room.findUnique({ where: { code } });
+      if (!room) {
+        socket.emit("error", "Invalid room code");
+        return;
+      }
+
+      const exists = await prisma.userInRoom.findUnique({
+        where: { roomId_userId: { roomId: room.id, userId } },
       });
-
-      if (!existingUserInRoom) {
+      if (!exists) {
         await prisma.userInRoom.create({
-          data: { roomId, userId },
+          data: { roomId: room.id, userId },
         });
       }
 
-      io.of("/collab").to(roomId).emit("user-joined", { userId });
+      console.log(`User ${userId} joined room id=${room.id} code=${code}`);
+      io.of("/collab").to(code).emit("user-joined", { userId });
     });
 
-    socket.on("send-message", ({ updates, roomId }) => {
-      socket.to(roomId).emit("receive-message", updates);
+    // CHAT
+    socket.on("send-message", ({ updates, roomCode }) => {
+      socket.to(roomCode).emit("receive-message", updates);
     });
 
-    socket.on("stream-song", async ({ songId, roomId, userId }) => {
+    // STREAM SONG
+    socket.on("stream-song", async ({ songId, roomCode }) => {
       await prisma.streamLog.create({
-        data: {
-          userId,
-          songId,
-          streamedAt: new Date(),
-        },
+        data: { userId, songId, streamedAt: new Date() },
       });
-
-      io.of("/collab").to(roomId).emit("song-streamed", { songId, userId });
+      const song = await prisma.song.findUnique({ where: { id: songId } });
+      console.log("Streamed Song" , song, roomCode)
+      io.of("/collab").to(roomCode).emit("song-streamed", { song, userId });
     });
 
-    socket.on("leave-room", async (roomId: string) => {
-      if (!roomId || !userId) return;
-
-      await prisma.userInRoom.delete({
-        where: {
-          roomId_userId: { userId, roomId },
-        },
-      });
-
-      io.of("/collab").to(roomId).emit("user-left-room", { userId });
+    // LEAVE ROOM
+    socket.on("leave-room", async (code: string) => {
+      const room = await prisma.room.findUnique({ where: { code } });
+      if (room) {
+        await prisma.userInRoom.delete({
+          where: { roomId_userId: { roomId: room.id, userId } },
+        });
+      }
+      io.of("/collab").to(code).emit("user-left-room", { userId });
+      socket.leave(code);
     });
 
-    socket.on("disconnect", async () => {
-      const userId = socket.userId;
-      const presenceKey = `presence:user:${userId}`;
-      await pubClient!.set(presenceKey, 'online', 'EX', 60);
-      clearInterval(interval);
+    // DISCONNECT
+    socket.on("disconnect", () => {
+      clearInterval(heartbeat);
       console.log(`User disconnected: ${userId}`);
-      // We don’t delete the key — TTL will expire it naturally
+      // TTL will expire presence key automatically
     });
   });
 };

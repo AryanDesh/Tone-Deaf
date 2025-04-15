@@ -109,8 +109,8 @@ model UserInRoom {
   userId    String   @db.Uuid
   joinedAt  DateTime @default(now())
 
-  room      Room     @relation(fields: [roomId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([roomId, userId])
 }
@@ -118,7 +118,7 @@ model UserInRoom {
 model Room {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name       String
-  socketId   String @unique
+  code   String @unique
   hostId    String @db.Uuid
   host      User  @relation(fields: [hostId], references: [id])
   users     UserInRoom[]

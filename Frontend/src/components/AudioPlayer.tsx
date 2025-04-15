@@ -12,7 +12,7 @@ import { useAudioContext } from "../context";
 */
 interface AudioPlayerProps {
   src: Song,
-  setSrc: React.Dispatch<React.SetStateAction<Song>>
+  setSrc: (Song :Song) => void
 }
 const AudioPlayer : FC<AudioPlayerProps> = ({ src, setSrc }) => {
 

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AudioContextProvider } from "../context"
+import { AudioContextProvider, CollabProvider, useCollabContext } from "../context"
 import { SearchBar, StarryBackground , Header, Player } from "../components"
 import { ContactPage, FriendsPage, AboutPage, CollaborationPage, SongPage, PlaylistsPage  } from "./"
 
@@ -10,8 +10,7 @@ export default function Pages() {
   const [showPlaylistModal, setShowPlaylistModal] = useState(false)
   const [showCollaborationModal, setShowCollaborationModal] = useState(false)
   const [activePage, setActivePage] = useState<string>("songs")
-
-
+  const {isHost, isInCollab }= useCollabContext();
 
   const toggleMenu = () => setMenuOpen(!menuOpen)
   const toggleSearch = () => setSearchOpen(!searchOpen)
@@ -19,47 +18,59 @@ export default function Pages() {
   const toggleCollaborationModal = () => setShowCollaborationModal(!showCollaborationModal)
 
   const renderPage = () => {
-    switch (activePage) {
-      case "songs":
-        return (
-          <SongPage
-            showPlaylistModal={showPlaylistModal}
-            togglePlaylistModal={togglePlaylistModal}
-            showCollaborationModal={showCollaborationModal}
-            toggleCollaborationModal={toggleCollaborationModal}
-          />
-        )
-      case "collaborate":
-        return (
-          <CollaborationPage
-            showCollaborationModal={showCollaborationModal}
-            toggleCollaborationModal={toggleCollaborationModal}
-            showPlaylistModal={showPlaylistModal}
-            togglePlaylistModal={togglePlaylistModal}
-          />
-        )
-      case "friends":
-        return <FriendsPage />
-      case "playlists":
-        return <PlaylistsPage showPlaylistModal={showPlaylistModal} togglePlaylistModal={togglePlaylistModal} />
-      case "about":
-        return <AboutPage />
-      case "contact":
-        return <ContactPage />
-      default:
-        return (
-          <SongPage
-            showPlaylistModal={showPlaylistModal}
-            togglePlaylistModal={togglePlaylistModal}
-            showCollaborationModal={showCollaborationModal}
-            toggleCollaborationModal={toggleCollaborationModal}
-          />
-        )
+    if(!isInCollab || (isInCollab && isHost)){
+      switch (activePage) {
+        case "songs":
+          return (
+            <SongPage
+              showPlaylistModal={showPlaylistModal}
+              togglePlaylistModal={togglePlaylistModal}
+              showCollaborationModal={showCollaborationModal}
+              toggleCollaborationModal={toggleCollaborationModal}
+            /> 
+          )
+        case "collaborate":
+          return (
+            <CollaborationPage
+              showCollaborationModal={showCollaborationModal}
+              toggleCollaborationModal={toggleCollaborationModal}
+              showPlaylistModal={showPlaylistModal}
+              togglePlaylistModal={togglePlaylistModal}
+            />
+          )
+        case "friends":
+          return <FriendsPage />
+        case "playlists":
+
+          return <PlaylistsPage showPlaylistModal={showPlaylistModal} togglePlaylistModal={togglePlaylistModal}/>
+        case "about":
+          return <AboutPage />
+        case "contact":
+          return <ContactPage />
+        default:
+          return (
+            <SongPage
+              showPlaylistModal={showPlaylistModal}
+              togglePlaylistModal={togglePlaylistModal}
+              showCollaborationModal={showCollaborationModal}
+              toggleCollaborationModal={toggleCollaborationModal}
+            />
+          )
+      }
+    }
+    else{
+      return (
+        <CollaborationPage
+          showCollaborationModal={showCollaborationModal}
+          toggleCollaborationModal={toggleCollaborationModal}
+          showPlaylistModal={showPlaylistModal}
+          togglePlaylistModal={togglePlaylistModal}
+        />
+      )
     }
   }
 
   return (
-    <AudioContextProvider>
       <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-800 text-white">
       <StarryBackground />
         <Header
@@ -69,21 +80,17 @@ export default function Pages() {
           toggleSearch={toggleSearch}
           togglePlaylistModal={togglePlaylistModal}
           toggleCollaborationModal={toggleCollaborationModal}
-        />
+          />
 
         <SearchBar
           searchOpen={searchOpen}
           toggleSearch={toggleSearch}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-        />
+          />
 
         <main className="pt-16 pb-28 relative">{renderPage()}</main>
-
-
         <Player />
       </div>
-    </AudioContextProvider>
-  )
+    )
 }
-

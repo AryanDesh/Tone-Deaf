@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { Song } from '../types/songTypes';
 
 export type Message = {
   sender: string;
@@ -6,9 +7,8 @@ export type Message = {
 };
 
 export type StreamSongPayload = {
-  roomId: string;
+  roomCode: string;
   songId: string;
-  userId: string;
 };
 
 // Server -> Client
@@ -17,7 +17,7 @@ export type ServerToClientEvents = {
   'receive-message': (message: Message) => void;
   'user-joined': (data: { userId: string }) => void;
   'user-left-room': (data: { userId: string }) => void;
-  'song-streamed': (data: { songId: string; userId: string }) => void;
+  'song-streamed': (data: { song: Song; userId: string }) => void;
   'Error': (msg: string) => void;
 };
 
