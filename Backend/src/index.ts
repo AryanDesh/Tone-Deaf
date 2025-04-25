@@ -24,7 +24,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Your routes
 app.use('/api/chunks', chunkRouter);
 app.use('/api/signup', signupRouter);
 app.use('/api/login', loginRouter);

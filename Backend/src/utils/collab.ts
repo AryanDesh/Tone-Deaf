@@ -57,8 +57,8 @@ export const sockets = () => {
     });
 
     // CHAT
-    socket.on("send-message", ({ updates, roomCode }) => {
-      socket.to(roomCode).emit("receive-message", updates);
+    socket.on("send-message", (message, roomCode) => {
+      socket.to(roomCode).emit("receive-message", message);
     });
 
     // STREAM SONG
@@ -66,9 +66,105 @@ export const sockets = () => {
       await prisma.streamLog.create({
         data: { userId, songId, streamedAt: new Date() },
       });
+      const user = await prisma.user.findUnique( { where : {id : userId} , select : { id: true , username : true}});
       const song = await prisma.song.findUnique({ where: { id: songId } });
       console.log("Streamed Song" , song, roomCode)
-      io.of("/collab").to(roomCode).emit("song-streamed", { song, userId });
+      io.of("/collab").to(roomCode).emit("song-streamed", { song, user });
+    });
+    
+    socket.on("create-playlist", async ({ playlistName, roomCode, songId }) => {
+      try {
+        const room = await prisma.room.findUnique({
+          where: { code: roomCode },
+          select: { id: true }
+        });
+    
+        if (!room) {
+          socket.emit("error", "Invalid room code");
+          return;
+        }
+    
+        const newPlaylist = await prisma.playlist.create({
+          data: {
+            name: playlistName,
+            userId: userId,
+            shared: true,
+          }
+        });
+    
+        const playlist = await prisma.sharedPlaylist.create({
+          data: {
+            roomId: room.id,
+            playlistId: newPlaylist.id,
+          },
+          include: {
+            playlist: {
+              include: {
+                playlistSong: {
+                  include: { song: true }
+                }
+              }
+            }
+          }
+        });
+    
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, username: true }
+        });
+    
+        let song = null;
+        if (songId) {
+          await prisma.playlistSong.create({
+            data: {
+              playlistId: newPlaylist.id,
+              songId: songId,
+            }
+          });
+        }
+    
+        console.log("Created Shared Playlist in Room", roomCode);
+    
+        io.of("/collab").to(roomCode).emit("playlist-created", {
+          playlist: {
+            id: newPlaylist.id,
+            name: newPlaylist.name,
+            songs: playlist.playlist.playlistSong.map(ps => ps.song)
+          },
+          createdBy: user,
+          initialSong: song,
+        });
+    
+      } catch (err) {
+        console.error("Error creating shared playlist:", err);
+        socket.emit("error", "Failed to create shared playlist");
+      }
+    });
+    
+    socket.on("add-song-to-playlist", async ({ songId, roomCode, playlistId }) => {
+      if (songId) {
+        // Optionally add this song to the new playlist
+        await prisma.playlistSong.create({
+          data: {
+            playlistId: playlistId,
+            songId: songId,
+          }
+        });
+        console.log("song added to playlist to " , playlistId , "room", roomCode);
+        socket.emit("song-added-to-playlist");
+      }
+      else {
+        socket.emit("error", "No song found to be added");
+      }
+    });
+    
+    socket.on("pause-song", async ({ songId, roomCode }) => {
+      await prisma.streamLog.create({
+        data: { userId, songId, streamedAt: new Date() },
+      });
+      const song = await prisma.song.findUnique({ where: { id: songId } });
+      console.log("Paused Song" , song, roomCode)
+      io.of("/collab").to(roomCode).emit("song-paused", { song, userId });
     });
 
     // LEAVE ROOM

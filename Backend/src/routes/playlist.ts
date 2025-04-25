@@ -8,12 +8,13 @@ playlistRouter.get('/all-playlist', async(req, res) => {
     try{
         const userId = req.userId;
         console.log(userId);
-        const UsersPlaylist = await prisma.user.findUnique({
-            where : { id : userId},
-            include :{ playlists :true }
-        })
-        const allPlayList = UsersPlaylist!.playlists;
-        res.json(allPlayList);
+        const UsersPrivatePlaylists = await prisma.playlist.findMany({
+            where: {
+              userId: userId,
+              shared: false,
+            }
+          });          
+        res.json(UsersPrivatePlaylists);
     }catch(e){
         res.status(404).json({message: "error fetching playlists" , error : e});
         
@@ -27,8 +28,7 @@ playlistRouter.get('/:playlistId', async (req, res) => {
         const playlist = await prisma.playlist.findUnique({
             where: { id: parseInt(playlistId) }, 
             include: {
-                PlaylistSong: { select: { songId : true, song: true } },
-
+                playlistSong: { select: { songId : true, song: true } },
             }
         });
 
@@ -40,7 +40,7 @@ playlistRouter.get('/:playlistId', async (req, res) => {
         res.status(200).json({
             playlistId: playlist.id,
             playlistName: playlist.name,
-            songs: playlist.PlaylistSong,
+            songs: playlist.playlistSong,
         });
     } catch (error) {
         console.error(error);
