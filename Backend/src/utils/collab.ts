@@ -125,7 +125,7 @@ export const sockets = () => {
     
         console.log("Created Shared Playlist in Room", roomCode);
     
-        io.of("/collab").to(roomCode).emit("playlist-created", {
+        socket.emit("playlist-created", {
           playlist: {
             id: newPlaylist.id,
             name: newPlaylist.name,
@@ -144,17 +144,21 @@ export const sockets = () => {
     socket.on("add-song-to-playlist", async ({ songId, roomCode, playlistId }) => {
       if (songId) {
         // Optionally add this song to the new playlist
-        await prisma.playlistSong.create({
+        const song  =  await prisma.song.findUnique( {
+          where : {id :songId}
+        })
+        if(!song) socket.emit("error", "No song found to be added");
+         await prisma.playlistSong.create({
           data: {
             playlistId: playlistId,
             songId: songId,
           }
         });
-        console.log("song added to playlist to " , playlistId , "room", roomCode);
-        socket.emit("song-added-to-playlist");
+        console.log(song?.title , "song added to playlist to " , playlistId , "room", roomCode);
+        socket.emit("song-added-to-playlist", song);
       }
       else {
-        socket.emit("error", "No song found to be added");
+        socket.emit("error", "Select Song to be added");
       }
     });
     

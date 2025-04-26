@@ -72,9 +72,10 @@ type CollabContextType = {
   isInCollab: boolean
   roomId: string | null
   isHost: boolean
-  setHost: () => void
+  setHost: (bool : boolean , hostName? : string) => void
   setCollab: (roomId: string) => void
   leaveCollab: () => void
+  hostName : string | null
 }
 
 const CollabContext = createContext<CollabContextType | undefined>(undefined)
@@ -82,6 +83,7 @@ const CollabContext = createContext<CollabContextType | undefined>(undefined)
 export const CollabProvider = ({ children }: { children: ReactNode }) => {
   const [isInCollab, setIsInCollab] = useState(false)
   const [isHost, setIsHost] = useState(false)
+  const [hostName, setHostName] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null)
 
   const setCollab = (id: string) => {
@@ -89,8 +91,10 @@ export const CollabProvider = ({ children }: { children: ReactNode }) => {
     setRoomId(id)
   }
 
-  const setHost = () => {
-    setIsHost(!isHost)
+  const setHost = (bool: boolean , hostName? : string) => {
+    if(hostName) setHostName(hostName);
+    setIsHost(bool);
+
   }
 
   const leaveCollab = () => {
@@ -100,7 +104,7 @@ export const CollabProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <CollabContext.Provider value={{ isInCollab, roomId, setCollab, leaveCollab, isHost, setHost }}>
+    <CollabContext.Provider value={{ isInCollab, roomId, setCollab, leaveCollab, isHost, setHost, hostName }}>
       {children}
     </CollabContext.Provider>
   )

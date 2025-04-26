@@ -17,9 +17,12 @@ import {
   LogOut,
   Headphones,
   Share2,
+  PauseCircle,
+  PlayCircle,
+  ListPlus,
 } from "lucide-react";
-import type { ChatMessage } from "../types/songTypes";
-import type { Message } from "../utils/socket";
+import type { ChatMessage, Song } from "../types/songTypes";
+import type { Message, IUser } from "../utils/socket";
 
 interface CollaborationPageProps {
   showCollaborationModal: boolean;
@@ -38,9 +41,14 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
   const [joinRoomId, setJoinRoomId] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
+  const [playlists, setPlaylists] = useState<Array<{id: string, name: string, songs: Song[]}>>([]);
+  const [currentPlaylist, setCurrentPlaylist] = useState<{id: string, name: string, songs: Song[]} | null>(null);
+  const [playlistName, setPlaylistName] = useState("");
+  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
 
   const { socket, connectSocket } = useSocketManager();
-  const { isInCollab, setCollab, setHost, roomId } = useCollabContext();
+  const { isInCollab, setCollab, setHost, roomId, hostName } = useCollabContext();
+  const { currSong, isPlaying, setIsPlaying, setCurrSong } = useAudioContext();
 
   const pageRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -78,6 +86,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
   // Bind chat listener exactly once
   useEffect(() => {
     const handleReceiveMessage = (update: Message) => {
+      // Mark message as incoming
       setChatMessages((prev) => [
         ...prev,
         {
@@ -85,14 +94,75 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
           sender: update.sender,
           message: update.content,
           timestamp: new Date(),
+          messageType: "incoming" // Mark as incoming message
         },
       ]);
     };
+    
+    const handlePlaylistCreated = (data: {
+      playlist: {
+        id: string,
+        name: string,
+        songs: Song[]
+      },
+      createdBy: any,
+      initialSong?: Song,
+    }) => {
+      setPlaylists(prev => [...prev, data.playlist]);
+      setCurrentPlaylist(data.playlist);
+      
+      // Add system notification to chat
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: "System",
+          message: `${data.createdBy.username || "Someone"} created playlist: ${data.playlist.name}`,
+          timestamp: new Date(),
+          messageType: "system" // Mark as system message
+        }
+      ]);
+      
+      // Hide create playlist form
+      setShowCreatePlaylist(false);
+    };
+    
+    const handleSongAddedToPlaylist = (data : {song: Song}) => {
+      if (currentPlaylist) {
+        const updatedPlaylist = {
+          ...currentPlaylist,
+          songs: [...currentPlaylist.songs, data.song]
+        };
+        
+        setCurrentPlaylist(updatedPlaylist);
+        setPlaylists(prev => prev.map(p => 
+          p.id === currentPlaylist.id ? updatedPlaylist : p
+        ));
+        
+        // Add system notification to chat
+        setChatMessages(prev => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            sender: "System",
+            message: `"${data.song.title}" by ${data.song.artist} added to playlist: ${currentPlaylist.name}`,
+            timestamp: new Date(),
+            messageType: "system" // Mark as system message
+          }
+        ]);
+      }
+    };
+    
     socket.on("receive-message", handleReceiveMessage);
+    socket.on("playlist-created", handlePlaylistCreated);
+    socket.on("song-added-to-playlist", handleSongAddedToPlaylist);
+    
     return () => {
       socket.off("receive-message", handleReceiveMessage);
+      socket.off("playlist-created", handlePlaylistCreated);
+      socket.off("song-added-to-playlist", handleSongAddedToPlaylist);
     };
-  }, [socket]);
+  }, [socket, currentPlaylist]);
 
   // Actions
   const createRoom = () => {
@@ -113,24 +183,74 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     socket.emit("leave-room", roomId);
     setCollab("");
     setChatMessages([]);
+    setPlaylists([]);
+    setCurrentPlaylist(null);
   };
 
-  // In CollaborationPage.tsx
   const sendMessage = (message: string) => {
     if (!message.trim() || !roomId) return;
     connectSocket();
     const msg = { sender: "You", content: message };
     socket.emit("send-message", msg, roomId);
-    // Immediate local echo
+    // Immediate local echo marked as outgoing
     setChatMessages((prev) => [
       ...prev,
-      { id: Date.now().toString(), sender: "You", message: message, timestamp: new Date() },
+      { 
+        id: Date.now().toString(), 
+        sender: "You", 
+        message: message, 
+        timestamp: new Date(),
+        messageType: "outgoing" // Mark as outgoing message
+      },
     ]);
+  };
+  
+  const togglePlayPause = () => {
+    if (!currSong || !roomId) return;
+    
+    if (isPlaying) {
+      // Pause the song
+      socket.emit("pause-song", { 
+        songId: currSong.id, 
+        roomCode: roomId 
+      });
+      setIsPlaying(false);
+    } else {
+      // Resume/play the song
+      socket.emit("stream-song", { 
+        songId: currSong.id, 
+        roomCode: roomId 
+      });
+      setIsPlaying(true);
+    }
+  };
+  
+  const createPlaylist = () => {
+    if (!playlistName.trim() || !roomId) return;
+    
+    const songId = currSong?.id || null;
+    socket.emit("create-playlist", {
+      playlistName: playlistName,
+      roomCode: roomId,
+      songId: songId || ""
+    });
+    
+    setPlaylistName("");
+  };
+  
+  const addSongToPlaylist = (playlistId: string) => {
+    if (!currSong || !roomId || !playlistId) return;
+    
+    socket.emit("add-song-to-playlist", {
+      roomCode: roomId,
+      songId: currSong.id,
+      playlistId: playlistId
+    });
   };
 
   return (
-<div ref={pageRef} className="min-h-screen bg-gray-900/80 backdrop-blur-0 text-white">
-    <div className="max-w-7xl mx-auto px-4 py-10">
+    <div ref={pageRef} className="min-h-screen bg-gray-900/80 backdrop-blur-0 text-white">
+      <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Header */}
         <div className="collab-header flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
@@ -298,17 +418,103 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                     </button>
                   </div>
                 </div>
-                {/* Participants & Now Playing */}
+                
+                {/* Now Playing */}
                 <div>
                   <p className="text-sm text-gray-400 mb-2">Now Playing</p>
                   <div className="flex items-center bg-gray-700 p-3 rounded">
-                    <Headphones className="mr-3 h-6 w-6 text-purple-400" />
-                    <div>
-                      <p className="text-white">Track Title</p>
-                      <p className="text-xs text-gray-400">by Artist</p>
+                    <button 
+                      onClick={togglePlayPause}
+                      className="mr-3 text-purple-400 hover:text-purple-300"
+                    >
+                      {isPlaying ? 
+                        <PauseCircle className="h-6 w-6" /> : 
+                        <PlayCircle className="h-6 w-6" />
+                      }
+                    </button>
+                    <div className="flex-1">
+                      <p className="text-white">{currSong?.title || "No track playing"}</p>
+                      <p className="text-xs text-gray-400">by {currSong?.artist || "Unknown"}</p>
                     </div>
+                    {hostName && (
+                      <div className="text-xs bg-purple-800 px-2 py-1 rounded">
+                        Played by {hostName}
+                      </div>
+                    )}
                   </div>
                 </div>
+                
+                {/* Playlists Section */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-gray-400">Shared Playlists</p>
+                    <button 
+                      onClick={() => setShowCreatePlaylist(!showCreatePlaylist)}
+                      className="text-xs text-purple-400 hover:text-purple-300"
+                    >
+                      {showCreatePlaylist ? "Cancel" : "Create New"}
+                    </button>
+                  </div>
+                  
+                  {/* Create Playlist Form */}
+                  {showCreatePlaylist && (
+                    <div className="mb-3 bg-gray-700 p-3 rounded">
+                      <CustomInput
+                        value={playlistName}
+                        onChange={(e) => setPlaylistName(e.target.value)}
+                        placeholder="Playlist name..."
+                        className="mb-2"
+                      />
+                      <div className="text-xs text-gray-400 mb-2">
+                        {currSong ? `Will add: "${currSong.title}"` : "No song selected to add"}
+                      </div>
+                      <CustomButton
+                        onClick={createPlaylist}
+                        disabled={!playlistName.trim()}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Plus className="mr-2 h-3 w-3" />
+                        Create Playlist
+                      </CustomButton>
+                    </div>
+                  )}
+                  
+                  {/* Playlists List */}
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {playlists.length === 0 ? (
+                      <div className="text-center py-3 text-sm text-gray-500">
+                        No shared playlists yet
+                      </div>
+                    ) : (
+                      playlists.map(playlist => (
+                        <div 
+                          key={playlist.id}
+                          className={`bg-gray-700 p-2 rounded ${currentPlaylist?.id === playlist.id ? 'border border-purple-500' : ''}`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <p className="font-medium">{playlist.name}</p>
+                            <div className="flex items-center">
+                              <span className="text-xs text-gray-400 mr-2">
+                                {playlist.songs.length} songs
+                              </span>
+                              {currSong && (
+                                <button
+                                  onClick={() => addSongToPlaylist(playlist.id)}
+                                  className="text-purple-400 hover:text-purple-300"
+                                  title="Add current song"
+                                >
+                                  <ListPlus className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+                
                 <CustomButton
                   onClick={togglePlaylistModal}
                   variant="outline"

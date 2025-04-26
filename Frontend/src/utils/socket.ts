@@ -11,13 +11,37 @@ export type StreamSongPayload = {
   songId: string;
 };
 
+export type IUser = {
+  id : string,
+  username : string,
+  playlist? : [],
+  likedId? : string,
+  followers? : [],
+  following? : [],
+  room? :[]
+}
+
+export type ICreatePlaylist = { playlistName : string, roomCode: string, songId :string };
+export type IAddSongToPlaylist = { playlistId: string, roomCode: string, songId :string };
+
 // Server -> Client
 export type ServerToClientEvents = {
   'room-created': (roomId: string) => void;
   'receive-message': (message: Message) => void;
   'user-joined': (data: { userId: string }) => void;
   'user-left-room': (data: { userId: string }) => void;
-  'song-streamed': (data: { song: Song; userId: string }) => void;
+  'song-streamed': (data: { song: Song; user: IUser }) => void;
+  'song-paused' : (data : {song : Song; userId : string}) => void;
+  'playlist-created' : (
+    data : {
+      playlist: {
+      id: string,
+      name: string,
+      songs: Song[]
+    },
+    createdBy: IUser,
+    initialSong?: Song,}) => void;
+  'song-added-to-playlist' : (data : {song : Song}) => void;
   'Error': (msg: string) => void;
 };
 
@@ -28,6 +52,9 @@ export type ClientToServerEvents = {
   'leave-room': (roomId: string) => void;
   'send-message': (message: Message, roomId: string) => void;
   'stream-song': (data: StreamSongPayload) => void;
+  'pause-song' : (data : StreamSongPayload) => void;
+  'create-playlist' : (data : ICreatePlaylist ) => void;
+  'add-song-to-playlist' : (data : IAddSongToPlaylist) =>  void;
 };
 
 const Socket_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000/collab";

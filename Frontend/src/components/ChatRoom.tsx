@@ -1,5 +1,4 @@
 "use client"
-
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { gsap } from "gsap"
@@ -105,35 +104,50 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ messages, sendMessage, sessionName 
           </div>
         ) : (
           messages.map((msg) => {
-            const isOwnMessage = msg.sender === "You";
+            // Check message type directly rather than inferring from sender
+            const isOutgoing = msg.messageType === "outgoing";
+            const isSystem = msg.messageType === "system";
+            
+            // Special handling for system messages
+            if (isSystem) {
+              return (
+                <div key={msg.id} className="flex justify-center message-item">
+                  <div className="bg-purple-800/40 text-purple-300 text-xs py-1 px-3 rounded-full">
+                    {msg.message}
+                  </div>
+                </div>
+              );
+            }
+            
             return (
               <div
                 key={msg.id}
-                className={`flex items-start space-x-3 message-item ${isOwnMessage ? "justify-end" : ""}`}
+                className={`flex message-item ${isOutgoing ? "justify-end" : "justify-start"}`}
               >
-                {!isOwnMessage && (
-                  <div className="flex flex-col items-center">
-                    <CustomAvatar name={msg.sender} />
-                    <span className="text-xs text-purple-300 mt-1">{getInitials(msg.sender)}</span>
+                {isOutgoing ? (
+                  // Outgoing message (right side)
+                  <div className="flex items-end space-x-2">
+                    <div className="max-w-[70%] rounded-2xl px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none">
+                      <p className="text-sm">{msg.message}</p>
+                      <p className="text-right text-xs mt-1 opacity-70">{formatTime(msg.timestamp)}</p>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <CustomAvatar name="You" />
+                      <span className="text-xs text-purple-300 mt-1">YOU</span>
+                    </div>
                   </div>
-                )}
-                
-                <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                    isOwnMessage
-                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none"
-                      : "bg-gray-800/60 text-white rounded-tl-none"
-                  }`}
-                >
-                  {!isOwnMessage && <p className="text-xs font-medium text-purple-300 mb-1">{msg.sender}</p>}
-                  <p className="text-sm">{msg.message}</p>
-                  <p className="text-right text-xs mt-1 opacity-70">{formatTime(msg.timestamp)}</p>
-                </div>
-                
-                {isOwnMessage && (
-                  <div className="flex flex-col items-center">
-                    <CustomAvatar name="You" />
-                    <span className="text-xs text-purple-300 mt-1">YOU</span>
+                ) : (
+                  // Incoming message (left side)
+                  <div className="flex items-end space-x-2">
+                    <div className="flex flex-col items-center">
+                      <CustomAvatar name={msg.sender} />
+                      <span className="text-xs text-purple-300 mt-1">{getInitials(msg.sender)}</span>
+                    </div>
+                    <div className="max-w-[70%] rounded-2xl px-4 py-3 bg-gray-800/60 text-white rounded-bl-none">
+                      <p className="text-xs font-medium text-purple-300 mb-1">{msg.sender}</p>
+                      <p className="text-sm">{msg.message}</p>
+                      <p className="text-right text-xs mt-1 opacity-70">{formatTime(msg.timestamp)}</p>
+                    </div>
                   </div>
                 )}
               </div>

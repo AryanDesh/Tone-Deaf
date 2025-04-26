@@ -30,6 +30,13 @@ export interface Song {
     mutualFriends? : number
   }
   
+export interface ChatMessage {
+  id: string;
+  sender: string;
+  message: string;
+  timestamp: Date;
+  messageType?: "incoming" | "outgoing" | "system"; 
+}
   export interface CollaborationSession {
     id: string
     name: string
