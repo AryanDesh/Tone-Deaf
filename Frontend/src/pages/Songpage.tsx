@@ -27,7 +27,7 @@ const SongsPage: React.FC<SongsPageProps> = ({
   showCollaborationModal,
   toggleCollaborationModal,
 }) => {
-  const { setCurrSong, setIsPlaying, setSongQueue } = useAudioContext()
+  const { setCurrSong, setIsPlaying, setPlaylist } = useAudioContext()
   const { isHost, isInCollab, roomId } = useCollabContext()
 
   const [allSongs, setAllSongs] = useState<Song[]>([])
@@ -56,7 +56,7 @@ const SongsPage: React.FC<SongsPageProps> = ({
     )
 
     setAllSongs(updatedSongs)
-    setSongQueue(updatedSongs)
+    setPlaylist(updatedSongs)
   }
 
   const fetchAllSongs = useCallback(async () => {
@@ -72,7 +72,7 @@ const SongsPage: React.FC<SongsPageProps> = ({
     } catch (error) {
       console.error("Fetching songs failed:", error)
     }
-  }, [setSongQueue])
+  }, [])
 
   useEffect(() => {
     fetchAllSongs()

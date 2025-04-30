@@ -9,7 +9,13 @@ let listenersBound = false;
 
 export const useSocketManager = () => {
   const { setCollab, setHost } = useCollabContext();
-  const { setCurrSong, setIsPlaying } = useAudioContext();
+  const { 
+    setCurrSong, 
+    setIsPlaying, 
+    setPlaylist, 
+    currSong,
+  } = useAudioContext();
+  
   
   const connectSocket = useCallback(() => {
     if (!connected) {
@@ -28,19 +34,21 @@ export const useSocketManager = () => {
       
       socket.on("song-streamed", ({ song, user }: {song: Song; user: IUser}) => {
         console.log("Song streamed:", song.title, "by", user.username);
+        
+        // Update current song
         setCurrSong(song);
         setHost(false, user.username);
         setIsPlaying(true);
       });
       
-      socket.on("song-paused", ({ song, userId }: {song: Song; userId: string}) => {
-        console.log("Song paused:", song.title, "by user", userId);
+      socket.on("song-paused", ({ userId }: { userId: string}) => {
+        console.log("Song paused:", currSong, "by user", userId);
         setIsPlaying(false);
       });
       
       socket.on("playlist-created", (data: {
         playlist: {
-          id: string,
+          id: number,
           name: string,
           songs: Song[]
         },
@@ -48,12 +56,28 @@ export const useSocketManager = () => {
         initialSong?: Song,
       }) => {
         console.log("Playlist created:", data.playlist.name, "by", data.createdBy.username);
-        // The main handling of this event will be in the CollaborationPage component
+        
+        // Set this as the current playlist
+        setPlaylist(data.playlist.songs, data.playlist.id, data.playlist.name , data.createdBy.username);
+        
+        // If there's an initial song, start playing it
+        if (data.initialSong) {
+          setCurrSong(data.initialSong);
+          setIsPlaying(true);
+        }
       });
       
-      socket.on("song-added-to-playlist", ( data : {song: Song}) => {
+      socket.on("song-added-to-playlist", (data : {playlist : {
+        playlistId: number,
+        name: string,
+        createdBy: {
+          id: string,
+          username: string
+        },
+        songs : Song[]} ,
+        song : Song}) => {
         console.log("Song added to playlist:", data.song.title);
-        // The main handling of this event will be in the CollaborationPage component
+        setPlaylist(data.playlist.songs, data.playlist.playlistId, data.playlist.name , data.playlist.createdBy.username);
       });
       
       socket.on("user-joined", ({ userId }: {userId: string}) => {

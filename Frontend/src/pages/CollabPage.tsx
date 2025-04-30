@@ -48,7 +48,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
 
   const { socket, connectSocket } = useSocketManager();
   const { isInCollab, setCollab, setHost, roomId, hostName } = useCollabContext();
-  const { currSong, isPlaying, setIsPlaying, setCurrSong } = useAudioContext();
+  const { currSong, isPlaying, setIsPlaying,togglePlay, setCurrSong } = useAudioContext();
 
   const pageRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
@@ -98,7 +98,24 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
         },
       ]);
     };
-    
+
+    const handleSongPaused = (data: {userId: string}) => {
+      console.log("Song paused by", data.userId);
+      // setIsPlaying(false);
+      
+      // Add system notification to chat
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: "System",
+          message: `${data.userId === "You" ? "You" : "Someone"} paused `,
+          timestamp: new Date(),
+          messageType: "system" 
+        }
+      ]);
+    };
+        
     const handlePlaylistCreated = (data: {
       playlist: {
         id: string,
@@ -147,7 +164,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
             sender: "System",
             message: `"${data.song.title}" by ${data.song.artist} added to playlist: ${currentPlaylist.name}`,
             timestamp: new Date(),
-            messageType: "system" // Mark as system message
+            messageType: "system" 
           }
         ]);
       }
@@ -156,11 +173,13 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     socket.on("receive-message", handleReceiveMessage);
     socket.on("playlist-created", handlePlaylistCreated);
     socket.on("song-added-to-playlist", handleSongAddedToPlaylist);
+    socket.on("song-paused", handleSongPaused);
     
     return () => {
       socket.off("receive-message", handleReceiveMessage);
       socket.off("playlist-created", handlePlaylistCreated);
       socket.off("song-added-to-playlist", handleSongAddedToPlaylist);
+      socket.off("song-paused", handleSongPaused); 
     };
   }, [socket, currentPlaylist]);
 
@@ -206,25 +225,30 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
   };
   
   const togglePlayPause = () => {
-    if (!currSong || !roomId) return;
+    if (!currSong || !roomId) {
+      console.log("Cannot toggle play/pause: No song or room ID");
+      return;
+    }
+    
+    console.log("Current playing state before toggle:", isPlaying);
     
     if (isPlaying) {
       // Pause the song
+      console.log("Emitting pause-song event for song:", currSong.id);
       socket.emit("pause-song", { 
         songId: currSong.id, 
         roomCode: roomId 
       });
       setIsPlaying(false);
     } else {
-      // Resume/play the song
+      console.log("Emitting stream-song event for song:", currSong.id);
       socket.emit("stream-song", { 
         songId: currSong.id, 
         roomCode: roomId 
       });
       setIsPlaying(true);
     }
-  };
-  
+  }; 
   const createPlaylist = () => {
     if (!playlistName.trim() || !roomId) return;
     

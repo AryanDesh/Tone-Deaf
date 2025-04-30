@@ -31,17 +31,25 @@ export type ServerToClientEvents = {
   'user-joined': (data: { userId: string }) => void;
   'user-left-room': (data: { userId: string }) => void;
   'song-streamed': (data: { song: Song; user: IUser }) => void;
-  'song-paused' : (data : {song : Song; userId : string}) => void;
+  'song-paused' : (data : {userId : string}) => void;
   'playlist-created' : (
     data : {
       playlist: {
-      id: string,
+      id: number,
       name: string,
       songs: Song[]
     },
     createdBy: IUser,
     initialSong?: Song,}) => void;
-  'song-added-to-playlist' : (data : {song : Song}) => void;
+  'song-added-to-playlist' : (data : {playlist : {
+    playlistId: number,
+    name: string,
+    createdBy: {
+      id: string,
+      username: string
+    },
+    songs : Song[]} ,
+    song : Song}) => void;
   'Error': (msg: string) => void;
 };
 
