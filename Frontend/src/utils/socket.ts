@@ -22,7 +22,7 @@ export type IUser = {
 }
 
 export type ICreatePlaylist = { playlistName : string, roomCode: string, songId :string };
-export type IAddSongToPlaylist = { playlistId: string, roomCode: string, songId :string };
+export type IAddSongToPlaylist = { playlistId: number, roomCode: string, songId :string };
 
 // Server -> Client
 export type ServerToClientEvents = {
@@ -32,6 +32,7 @@ export type ServerToClientEvents = {
   'user-left-room': (data: { userId: string }) => void;
   'song-streamed': (data: { song: Song; user: IUser }) => void;
   'song-paused' : (data : {userId : string}) => void;
+  'song-played' : (data : {userId : string}) => void;
   'playlist-created' : (
     data : {
       playlist: {
@@ -61,6 +62,7 @@ export type ClientToServerEvents = {
   'send-message': (message: Message, roomId: string) => void;
   'stream-song': (data: StreamSongPayload) => void;
   'pause-song' : (data : StreamSongPayload) => void;
+  'play-song' : (data : StreamSongPayload) => void;
   'create-playlist' : (data : ICreatePlaylist ) => void;
   'add-song-to-playlist' : (data : IAddSongToPlaylist) =>  void;
 };

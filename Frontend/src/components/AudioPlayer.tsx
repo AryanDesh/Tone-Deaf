@@ -54,7 +54,7 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
   
       hls.on(Hls.Events.MANIFEST_PARSED, async () => {
         try {
-          await audioRef.current?.play();
+          // await audioRef.current?.play();
         } catch (err) {
           console.log("Auto-play blocked", err);
         }

@@ -292,6 +292,10 @@ export const sockets = () => {
       }
     });
     
+    socket.on("play-song", async ({roomCode}) => {
+      socket.to(roomCode).emit("song-played", { userId });
+    });
+
     socket.on("pause-song", async ({roomCode}) => {
       socket.to(roomCode).emit("song-paused", { userId });
     });

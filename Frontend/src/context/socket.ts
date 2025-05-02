@@ -40,6 +40,11 @@ export const useSocketManager = () => {
         setHost(false, user.username);
         setIsPlaying(true);
       });
+
+      socket.on("song-played", ({ userId }: { userId: string}) => {
+        console.log("Song played:", currSong, "by user", userId);
+        setIsPlaying(true);
+      });
       
       socket.on("song-paused", ({ userId }: { userId: string}) => {
         console.log("Song paused:", currSong, "by user", userId);

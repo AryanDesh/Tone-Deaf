@@ -41,8 +41,8 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
   const [joinRoomId, setJoinRoomId] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
-  const [playlists, setPlaylists] = useState<Array<{id: string, name: string, songs: Song[]}>>([]);
-  const [currentPlaylist, setCurrentPlaylist] = useState<{id: string, name: string, songs: Song[]} | null>(null);
+  const [playlists, setPlaylists] = useState<Array<{id: number, name: string, songs: Song[]}>>([]);
+  const [currentPlaylist, setCurrentPlaylist] = useState<{id: number, name: string, songs: Song[]} | null>(null);
   const [playlistName, setPlaylistName] = useState("");
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
 
@@ -118,7 +118,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
         
     const handlePlaylistCreated = (data: {
       playlist: {
-        id: string,
+        id: number,
         name: string,
         songs: Song[]
       },
@@ -242,7 +242,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
       setIsPlaying(false);
     } else {
       console.log("Emitting stream-song event for song:", currSong.id);
-      socket.emit("stream-song", { 
+      socket.emit("play-song", { 
         songId: currSong.id, 
         roomCode: roomId 
       });
@@ -262,7 +262,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     setPlaylistName("");
   };
   
-  const addSongToPlaylist = (playlistId: string) => {
+  const addSongToPlaylist = (playlistId: number) => {
     if (!currSong || !roomId || !playlistId) return;
     
     socket.emit("add-song-to-playlist", {
@@ -286,7 +286,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                 ? `In session: ${roomId}`
                 : "Create or join a music session"}
             </p>
-          </div>
+          </div>6
           {isInCollab && (
             <CustomButton
               onClick={leaveRoom}
