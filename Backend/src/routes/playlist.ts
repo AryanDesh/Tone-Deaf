@@ -21,6 +21,82 @@ playlistRouter.get('/all-playlist', async(req, res) => {
     }
 })
 
+playlistRouter.get('/shared-playlist', async (req, res) => {
+    try {
+      const userId = req.userId 
+      
+      if (!userId) {
+        res.status(401).json({ error: 'User ID is required' });
+        return 
+      }
+  const sharedPlaylists = await prisma.playlist.findMany({
+        where: {
+          userId: userId,
+          shared: true
+        },
+        include: {
+          playlistSong: {
+            include: {
+              song: true
+            }
+          },
+          sharedPlaylist: {
+            include: {
+              room: {
+                select: {
+                  name: true,
+                  code: true,
+                  users: {
+                    select: {
+                      user: {
+                        select: {
+                          username: true,
+                          id: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+  
+      const formattedPlaylists = sharedPlaylists.map(playlist => {
+        return {
+          id: playlist.id,
+          name: playlist.name,
+          songs: playlist.playlistSong.map(ps => ps.song),
+          sharedIn: playlist.sharedPlaylist ? {
+            room: {
+              id: playlist.sharedPlaylist.roomId,
+              name: playlist.sharedPlaylist.room.name,
+              code: playlist.sharedPlaylist.room.code,
+              participants: playlist.sharedPlaylist.room.users.map(u => ({
+                id: u.user.id,
+                username: u.user.username
+              }))
+            }
+          } : null
+        };
+      });
+  
+      res.status(200).json({ 
+          success: true, 
+          playlists: formattedPlaylists 
+        }); 
+    } catch (error) {
+      console.error('Error fetching shared playlists:', error);
+      res.status(500).json({ 
+          error: 'Failed to fetch shared playlists',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }); 
+    }
+  })
+  
+  
+
 playlistRouter.get('/:playlistId', async (req, res) => {
     const { playlistId } = req.params;
 

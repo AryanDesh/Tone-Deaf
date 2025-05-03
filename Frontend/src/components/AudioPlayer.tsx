@@ -3,7 +3,7 @@ import IconButton from "./IconButton";
 import Hls from "hls.js";
 import { supabase } from "../utils/supe";
 import { Song } from "../types/songTypes";
-import { useAudioContext } from "../context";
+import { useAudioContext, useCollabContext } from "../context";
 import { useSocketManager } from "../context/socket";
 
 interface AudioPlayerProps {
@@ -20,8 +20,9 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
   const playRef = useRef<number | null>(null)
   const timeRef = useRef<HTMLDivElement>(null)
   const seekRef = useRef<HTMLInputElement>(null)
-  const { isPlaying, setIsPlaying, nextSong, prevSong } = useAudioContext();
+  const { isPlaying, setIsPlaying, nextSong, prevSong, currSong } = useAudioContext();
   const { socket } = useSocketManager();
+  const { isInCollab, roomId } = useCollabContext();
   
   const getAudioFile = useCallback(async () => {
     const { data } = supabase.storage.from('Songs-Chunks').getPublicUrl(`${src.id}/${src.id}.m3u8`);
@@ -49,7 +50,7 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
       
       hls.on(Hls.Events.FRAG_CHANGED, () => {
         console.log("Fragment changed, resuming playback");
-        audioRef.current?.play();
+        // audioRef.current?.play();
       });
   
       hls.on(Hls.Events.MANIFEST_PARSED, async () => {
@@ -156,6 +157,9 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
   
   const handlePlayNext = () => {
     nextSong();
+    if(isInCollab) {
+      socket.emit('stream-song', { roomCode: roomId! , songId: currSong!.id,  })
+    }
     // Make sure the new song is reflected in the component
     // If the src prop doesn't automatically update from context changes
     // you might need to use useEffect to sync or manually update here
@@ -163,6 +167,9 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
   
   const handlePlayPrev = () => {
     prevSong();
+    if(isInCollab) {
+      socket.emit('stream-song', { roomCode: roomId! , songId: currSong!.id,  })
+    }
     // Same consideration as above regarding src prop updates
   }
   

@@ -22,7 +22,6 @@ import {
   ListPlus,
 } from "lucide-react";
 import type { ChatMessage, Song } from "../types/songTypes";
-import type { Message, IUser } from "../utils/socket";
 
 interface CollaborationPageProps {
   showCollaborationModal: boolean;
@@ -37,21 +36,37 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
   showPlaylistModal,
   togglePlaylistModal,
 }) => {
+  // Local UI state
   const [roomName, setRoomName] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
-  const [playlists, setPlaylists] = useState<Array<{id: number, name: string, songs: Song[]}>>([]);
-  const [currentPlaylist, setCurrentPlaylist] = useState<{id: number, name: string, songs: Song[]} | null>(null);
-  const [playlistName, setPlaylistName] = useState("");
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
-
-  const { socket, connectSocket } = useSocketManager();
-  const { isInCollab, setCollab, setHost, roomId, hostName } = useCollabContext();
-  const { currSong, isPlaying, setIsPlaying,togglePlay, setCurrSong } = useAudioContext();
-
+  const [playlistName, setPlaylistName] = useState("");
+  
+  // References for animations
   const pageRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+
+  // Global context
+  const { socket, connectSocket } = useSocketManager();
+  const { 
+    isInCollab, 
+    setCollab, 
+    leaveCollab, 
+    roomId, 
+    hostName,
+    isHost 
+  } = useCollabContext();
+  
+  const { 
+    currSong, 
+    isPlaying, 
+    setIsPlaying, 
+    togglePlay, 
+    playlist,
+    setPlaylist 
+  } = useAudioContext();
 
   // Entry animations
   useEffect(() => {
@@ -83,10 +98,9 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     return () => ctx.revert();
   }, [isInCollab]);
 
-  // Bind chat listener exactly once
+  // Chat message handling
   useEffect(() => {
-    const handleReceiveMessage = (update: Message) => {
-      // Mark message as incoming
+    const handleReceiveMessage = (update: { sender: string, content: string }) => {
       setChatMessages((prev) => [
         ...prev,
         {
@@ -94,22 +108,33 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
           sender: update.sender,
           message: update.content,
           timestamp: new Date(),
-          messageType: "incoming" // Mark as incoming message
+          messageType: "incoming"
         },
       ]);
     };
 
-    const handleSongPaused = (data: {userId: string}) => {
-      console.log("Song paused by", data.userId);
-      // setIsPlaying(false);
-      
+    const handleSongPaused = () => {
       // Add system notification to chat
       setChatMessages(prev => [
         ...prev,
         {
           id: Date.now().toString(),
           sender: "System",
-          message: `${data.userId === "You" ? "You" : "Someone"} paused `,
+          message: `${hostName || "Someone"} paused the music`,
+          timestamp: new Date(),
+          messageType: "system" 
+        }
+      ]);
+    };
+    
+    const handleSongPlayed = () => {
+      // Add system notification to chat
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: "System",
+          message: `${hostName || "Someone"} started playing music`,
           timestamp: new Date(),
           messageType: "system" 
         }
@@ -122,12 +147,8 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
         name: string,
         songs: Song[]
       },
-      createdBy: any,
-      initialSong?: Song,
+      createdBy: { username: string },
     }) => {
-      setPlaylists(prev => [...prev, data.playlist]);
-      setCurrentPlaylist(data.playlist);
-      
       // Add system notification to chat
       setChatMessages(prev => [
         ...prev,
@@ -136,52 +157,49 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
           sender: "System",
           message: `${data.createdBy.username || "Someone"} created playlist: ${data.playlist.name}`,
           timestamp: new Date(),
-          messageType: "system" // Mark as system message
+          messageType: "system"
         }
       ]);
+
+      setPlaylist(data.playlist.songs, data.playlist.id , data.createdBy.username , data.playlist.name)
       
       // Hide create playlist form
       setShowCreatePlaylist(false);
     };
-    
-    const handleSongAddedToPlaylist = (data : {song: Song}) => {
-      if (currentPlaylist) {
-        const updatedPlaylist = {
-          ...currentPlaylist,
-          songs: [...currentPlaylist.songs, data.song]
-        };
-        
-        setCurrentPlaylist(updatedPlaylist);
-        setPlaylists(prev => prev.map(p => 
-          p.id === currentPlaylist.id ? updatedPlaylist : p
-        ));
-        
-        // Add system notification to chat
-        setChatMessages(prev => [
-          ...prev,
-          {
-            id: Date.now().toString(),
-            sender: "System",
-            message: `"${data.song.title}" by ${data.song.artist} added to playlist: ${currentPlaylist.name}`,
-            timestamp: new Date(),
-            messageType: "system" 
-          }
-        ]);
+
+    const handleSongAddedToPlaylist = (data: { 
+      song: Song,
+      playlist: {
+        name: string
       }
+    }) => {
+      // Add system notification to chat
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: "System",
+          message: `"${data.song.title}" by ${data.song.artist} added to playlist: ${data.playlist.name}`,
+          timestamp: new Date(),
+          messageType: "system" 
+        }
+      ]);
     };
     
     socket.on("receive-message", handleReceiveMessage);
     socket.on("playlist-created", handlePlaylistCreated);
     socket.on("song-added-to-playlist", handleSongAddedToPlaylist);
     socket.on("song-paused", handleSongPaused);
+    socket.on("song-played", handleSongPlayed);
     
     return () => {
       socket.off("receive-message", handleReceiveMessage);
       socket.off("playlist-created", handlePlaylistCreated);
       socket.off("song-added-to-playlist", handleSongAddedToPlaylist);
-      socket.off("song-paused", handleSongPaused); 
+      socket.off("song-paused", handleSongPaused);
+      socket.off("song-played", handleSongPlayed);
     };
-  }, [socket, currentPlaylist]);
+  }, [socket, hostName]);
 
   // Actions
   const createRoom = () => {
@@ -196,14 +214,12 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     socket.emit("join-room", joinRoomId);
     setCollab(joinRoomId);
   };
-
-  const leaveRoom = () => {
+  
+  const handleLeaveRoom = () => {
     if (!roomId) return;
     socket.emit("leave-room", roomId);
-    setCollab("");
+    leaveCollab();
     setChatMessages([]);
-    setPlaylists([]);
-    setCurrentPlaylist(null);
   };
 
   const sendMessage = (message: string) => {
@@ -211,50 +227,47 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     connectSocket();
     const msg = { sender: "You", content: message };
     socket.emit("send-message", msg, roomId);
-    // Immediate local echo marked as outgoing
+    
+    // Immediate local echo
     setChatMessages((prev) => [
       ...prev,
       { 
         id: Date.now().toString(), 
         sender: "You", 
-        message: message, 
+        message, 
         timestamp: new Date(),
-        messageType: "outgoing" // Mark as outgoing message
+        messageType: "outgoing"
       },
     ]);
   };
   
-  const togglePlayPause = () => {
+  const handleTogglePlayPause = () => {
     if (!currSong || !roomId) {
       console.log("Cannot toggle play/pause: No song or room ID");
       return;
     }
     
-    console.log("Current playing state before toggle:", isPlaying);
-    
     if (isPlaying) {
-      // Pause the song
-      console.log("Emitting pause-song event for song:", currSong.id);
       socket.emit("pause-song", { 
         songId: currSong.id, 
         roomCode: roomId 
       });
       setIsPlaying(false);
     } else {
-      console.log("Emitting stream-song event for song:", currSong.id);
       socket.emit("play-song", { 
         songId: currSong.id, 
         roomCode: roomId 
       });
       setIsPlaying(true);
     }
-  }; 
+  };
+  
   const createPlaylist = () => {
     if (!playlistName.trim() || !roomId) return;
     
     const songId = currSong?.id || null;
     socket.emit("create-playlist", {
-      playlistName: playlistName,
+      playlistName,
       roomCode: roomId,
       songId: songId || ""
     });
@@ -268,9 +281,23 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     socket.emit("add-song-to-playlist", {
       roomCode: roomId,
       songId: currSong.id,
-      playlistId: playlistId
+      playlistId
     });
   };
+
+  // Get playlist songs from context
+  const getPlaylistSongs = () => {
+    return playlist.toArray();
+  };
+
+  // Get playlist info from context
+  const getPlaylistInfo = () => {
+    return playlist.getPlaylistInfo();
+  };
+
+  const playlistInfo = getPlaylistInfo();
+  const playlistSongs = getPlaylistSongs();
+  const hasPlaylist = playlistInfo.playListId !== null;
 
   return (
     <div ref={pageRef} className="min-h-screen bg-gray-900/80 backdrop-blur-0 text-white">
@@ -286,10 +313,10 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                 ? `In session: ${roomId}`
                 : "Create or join a music session"}
             </p>
-          </div>6
+          </div>
           {isInCollab && (
             <CustomButton
-              onClick={leaveRoom}
+              onClick={handleLeaveRoom}
               variant="danger"
               className="mt-4 md:mt-0 flex items-center"
             >
@@ -448,7 +475,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                   <p className="text-sm text-gray-400 mb-2">Now Playing</p>
                   <div className="flex items-center bg-gray-700 p-3 rounded">
                     <button 
-                      onClick={togglePlayPause}
+                      onClick={handleTogglePlayPause}
                       className="mr-3 text-purple-400 hover:text-purple-300"
                     >
                       {isPlaying ? 
@@ -460,9 +487,9 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                       <p className="text-white">{currSong?.title || "No track playing"}</p>
                       <p className="text-xs text-gray-400">by {currSong?.artist || "Unknown"}</p>
                     </div>
-                    {hostName && (
+                    {hostName && !isHost && (
                       <div className="text-xs bg-purple-800 px-2 py-1 rounded">
-                        Played by {hostName}
+                        Host: {hostName}
                       </div>
                     )}
                   </div>
@@ -471,7 +498,9 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                 {/* Playlists Section */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm text-gray-400">Shared Playlists</p>
+                    <p className="text-sm text-gray-400">
+                      {hasPlaylist ? "Current Playlist" : "Shared Playlists"}
+                    </p>
                     <button 
                       onClick={() => setShowCreatePlaylist(!showCreatePlaylist)}
                       className="text-xs text-purple-400 hover:text-purple-300"
@@ -504,39 +533,52 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                     </div>
                   )}
                   
-                  {/* Playlists List */}
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {playlists.length === 0 ? (
-                      <div className="text-center py-3 text-sm text-gray-500">
-                        No shared playlists yet
-                      </div>
-                    ) : (
-                      playlists.map(playlist => (
-                        <div 
-                          key={playlist.id}
-                          className={`bg-gray-700 p-2 rounded ${currentPlaylist?.id === playlist.id ? 'border border-purple-500' : ''}`}
-                        >
-                          <div className="flex justify-between items-center">
-                            <p className="font-medium">{playlist.name}</p>
-                            <div className="flex items-center">
-                              <span className="text-xs text-gray-400 mr-2">
-                                {playlist.songs.length} songs
-                              </span>
-                              {currSong && (
-                                <button
-                                  onClick={() => addSongToPlaylist(playlist.id)}
-                                  className="text-purple-400 hover:text-purple-300"
-                                  title="Add current song"
-                                >
-                                  <ListPlus className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
+                  {/* Current Playlist */}
+                  {hasPlaylist ? (
+                    <div className="bg-gray-700 p-3 rounded">
+                      <div className="flex justify-between items-center mb-2">
+                        <div>
+                          <p className="font-medium">{playlistInfo.playListName}</p>
+                          <p className="text-xs text-gray-400">
+                            by {playlistInfo.playlistCreator || "Unknown"} • {playlistSongs.length} songs
+                          </p>
                         </div>
-                      ))
-                    )}
-                  </div>
+                        {currSong && (
+                          <button
+                            onClick={() => addSongToPlaylist(playlistInfo.playListId as number)}
+                            className="text-purple-400 hover:text-purple-300"
+                            title="Add current song"
+                          >
+                            <ListPlus className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Songs list */}
+                      <div className="mt-3 max-h-32 overflow-y-auto">
+                        {playlistSongs.length === 0 ? (
+                          <p className="text-sm text-gray-500 text-center py-2">No songs yet</p>
+                        ) : (
+                          <div className="space-y-1">
+                            {playlistSongs.map(song => (
+                              <div 
+                                key={song.id}
+                                className={`text-sm p-1 rounded ${
+                                  currSong?.id === song.id ? 'bg-purple-900/50' : ''
+                                }`}
+                              >
+                                {song.title} - {song.artist}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-3 text-sm text-gray-500">
+                      No active playlist
+                    </div>
+                  )}
                 </div>
                 
                 <CustomButton

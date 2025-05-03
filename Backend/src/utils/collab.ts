@@ -182,7 +182,7 @@ export const sockets = () => {
     
         console.log("Created Shared Playlist in Room", roomCode);
     
-        socket.emit("playlist-created", {
+        io.of("/collab").to(roomCode).emit("playlist-created", {
           playlist: {
             id: newPlaylist.id,
             name: newPlaylist.name,
@@ -275,7 +275,7 @@ export const sockets = () => {
         })    
 
         console.log(song.title, "song added to playlist", playlistId, "room", roomCode);
-        socket.emit("song-added-to-playlist", { playlist :{
+        io.of("/collab").to(roomCode).emit("song-added-to-playlist", { playlist :{
 
           playlistId: updatedPlaylist!.id,
           name: updatedPlaylist!.name,
