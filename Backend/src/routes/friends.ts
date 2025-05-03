@@ -11,14 +11,17 @@ friendRouter.use(auth);
 friendRouter.post("/request/:friendId", async (req, res) => {
   const { friendId } = req.params;
   const userId = req.userId;
+  
   if(!userId) {
-    res.json({message : "Login to send friendRequest"})
+    res.json({message : "Login to send friendRequest"});
     return;
   }
-  if (userId === friendId)  {
+  
+  if (userId === friendId) {
     res.status(400).json({ message: "You cannot send a request to yourself." });
     return;
   }
+  
   try {
     const existingFriendship = await prisma.friendship.findFirst({
       where: {
@@ -28,12 +31,12 @@ friendRouter.post("/request/:friendId", async (req, res) => {
         ],
       },
     });
-
-    if (existingFriendship)  {
-      res.status(400).json({ message: "Friend request already exists." })
+    
+    if (existingFriendship) {
+      res.status(400).json({ message: "Friend request already exists." });
       return;
-    };
-
+    }
+    
     const friendship = await prisma.friendship.create({
       data: {
         followingId: friendId,
@@ -41,8 +44,8 @@ friendRouter.post("/request/:friendId", async (req, res) => {
         status: "PENDING",
       },
     });
-
-    res.status(201).json({ message: "Friend request sent.", data : friendship });
+    
+    res.status(201).json({ message: "Friend request sent.", data: friendship });
   } catch (error) {
     res.status(500).json({ error: "Error sending friend request." });
   }
@@ -52,19 +55,19 @@ friendRouter.post("/request/:friendId", async (req, res) => {
 friendRouter.post("/accept/:friendId", async (req, res) => {
   const { friendId } = req.params;
   const userId = req.userId;
-
+  
   try {
     const friendship = await prisma.friendship.updateMany({
       where: { followingId: userId, followerId: friendId, status: "PENDING" },
       data: { status: "ACCEPTED" },
     });
-
+    
     if (!friendship.count) {
       res.status(404).json({ message: "Friend request not found." });
       return;
     } 
-
-    res.json({ message: "Friend request accepted." , data : friendship});
+    
+    res.json({ message: "Friend request accepted.", data: friendship });
   } catch (error) {
     res.status(500).json({ error: "Error accepting friend request." });
   }
@@ -74,18 +77,18 @@ friendRouter.post("/accept/:friendId", async (req, res) => {
 friendRouter.post("/reject/:friendId", async (req, res) => {
   const { friendId } = req.params;
   const userId = req.userId;
-
+  
   try {
     const deletedFriendship = await prisma.friendship.deleteMany({
       where: { followingId: userId, followerId: friendId, status: "PENDING" },
     });
-
+    
     if (!deletedFriendship.count) {
       res.status(404).json({ message: "Friend request not found." });
       return;
     } 
-
-    res.json({ message: "Friend request rejected.", data : deletedFriendship });
+    
+    res.json({ message: "Friend request rejected.", data: deletedFriendship });
   } catch (error) {
     res.status(500).json({ error: "Error rejecting friend request." });
   }
@@ -95,7 +98,7 @@ friendRouter.post("/reject/:friendId", async (req, res) => {
 friendRouter.delete("/remove/:friendId", async (req, res) => {
   const { friendId } = req.params;
   const userId = req.userId;
-
+  
   try {
     const deletedFriendship = await prisma.friendship.deleteMany({
       where: {
@@ -105,13 +108,13 @@ friendRouter.delete("/remove/:friendId", async (req, res) => {
         ],
       },
     });
-
+    
     if (!deletedFriendship.count) {
       res.status(404).json({ message: "Friendship not found." });
       return;
     } 
-
-    res.json({ message: "Friend removed successfully." , data : deletedFriendship});
+    
+    res.json({ message: "Friend removed successfully.", data: deletedFriendship });
   } catch (error) {
     res.status(500).json({ error: "Error removing friend." });
   }
@@ -121,7 +124,7 @@ friendRouter.delete("/remove/:friendId", async (req, res) => {
 friendRouter.post("/block/:friendId", async (req, res) => {
   const { friendId } = req.params;
   const userId = req.userId;
-
+  
   try {
     const blockedFriendship = await prisma.friendship.updateMany({
       where: {
@@ -132,13 +135,13 @@ friendRouter.post("/block/:friendId", async (req, res) => {
       },
       data: { status: "BLOCKED" },
     });
-
+    
     if (!blockedFriendship.count) {
       res.status(404).json({ message: "Friendship not found." });
       return;
     } 
-
-    res.json({ message: "User blocked.", data : blockedFriendship });
+    
+    res.json({ message: "User blocked.", data: blockedFriendship });
   } catch (error) {
     res.status(500).json({ error: "Error blocking user." });
   }
@@ -148,7 +151,7 @@ friendRouter.post("/block/:friendId", async (req, res) => {
 friendRouter.post("/unblock/:friendId", async (req, res) => {
   const { friendId } = req.params;
   const userId = req.userId;
-
+  
   try {
     const unblockedFriendship = await prisma.friendship.updateMany({
       where: {
@@ -159,12 +162,13 @@ friendRouter.post("/unblock/:friendId", async (req, res) => {
       },
       data: { status: "ACCEPTED" },
     });
-
-    if (!unblockedFriendship.count)  {
+    
+    if (!unblockedFriendship.count) {
       res.status(404).json({ message: "Friendship not found." });
       return;
     }
-    res.json({ message: "User unblocked.", data : unblockedFriendship });
+    
+    res.json({ message: "User unblocked.", data: unblockedFriendship });
   } catch (error) {
     res.status(500).json({ error: "Error unblocking user." });
   }
@@ -173,7 +177,7 @@ friendRouter.post("/unblock/:friendId", async (req, res) => {
 // Get Friend List
 friendRouter.get("/", async (req, res) => {
   const userId = req.userId;
-
+  
   try {
     const friends = await prisma.friendship.findMany({
       where: {
@@ -187,26 +191,167 @@ friendRouter.get("/", async (req, res) => {
         follower: { select: { id: true, username: true, email: true } },
       },
     });
-
+    
     const formattedFriends = friends.map((f) => ({
       id: f.followingId === userId ? f.follower.id : f.following.id,
       username: f.followingId === userId ? f.follower.username : f.following.username,
       email: f.followingId === userId ? f.follower.email : f.following.email,
     }));
-
+    
     res.json({ friends: formattedFriends });
   } catch (error) {
     res.status(500).json({ error: "Error retrieving friends list." });
   }
 });
 
+// Get Pending Friend Requests (Received)
+friendRouter.get("/pending/received", async (req, res) => {
+  const userId = req.userId;
+  
+  try {
+    const pendingRequests = await prisma.friendship.findMany({
+      where: { 
+        followingId: userId, 
+        status: "PENDING" 
+      },
+      include: {
+        follower: { 
+          select: { 
+            id: true, 
+            username: true, 
+            email: true 
+          } 
+        },
+      },
+    });
+    
+    const formattedRequests = pendingRequests.map((request) => ({
+      requestId: request.id,
+      user: {
+        id: request.follower.id,
+        username: request.follower.username,
+        email: request.follower.email,
+      },
+      createdAt: request.created_at,
+    }));
+    
+    res.json({ pendingRequests: formattedRequests });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error retrieving pending friend requests." });
+  }
+});
+
+// Get Pending Friend Requests (Sent)
+friendRouter.get("/pending/sent", async (req, res) => {
+  const userId = req.userId;
+  
+  try {
+    const sentRequests = await prisma.friendship.findMany({
+      where: { 
+        followerId: userId, 
+        status: "PENDING" 
+      },
+      include: {
+        following: { 
+          select: { 
+            id: true, 
+            username: true, 
+            email: true 
+          } 
+        },
+      },
+    });
+    
+    const formattedRequests = sentRequests.map((request) => ({
+      requestId: request.id,
+      user: {
+        id: request.following.id,
+        username: request.following.username,
+        email: request.following.email,
+      },
+      createdAt: request.created_at,
+    }));
+    
+    res.json({ sentRequests: formattedRequests });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error retrieving sent friend requests." });
+  }
+});
+
+// Cancel a sent friend request
+friendRouter.delete("/request/:friendId", async (req, res) => {
+  const { friendId } = req.params;
+  const userId = req.userId;
+  
+  try {
+    const deletedRequest = await prisma.friendship.deleteMany({
+      where: { 
+        followingId: friendId, 
+        followerId: userId, 
+        status: "PENDING" 
+      },
+    });
+    
+    if (!deletedRequest.count) {
+      res.status(404).json({ message: "Friend request not found." });
+      return;
+    }
+    
+    res.json({ message: "Friend request canceled successfully." });
+  } catch (error) {
+    res.status(500).json({ error: "Error canceling friend request." });
+  }
+});
+
+// Get Blocked Users
+friendRouter.get("/blocked", async (req, res) => {
+  const userId = req.userId;
+  
+  try {
+    const blockedUsers = await prisma.friendship.findMany({
+      where: {
+        OR: [
+          { followingId: userId, status: "BLOCKED" },
+          { followerId: userId, status: "BLOCKED" },
+        ],
+      },
+      include: {
+        following: { select: { id: true, username: true, email: true } },
+        follower: { select: { id: true, username: true, email: true } },
+      },
+    });
+    
+    const formattedBlocked = blockedUsers.map((relation) => {
+      // Determine which user is the blocked one (not the current user)
+      const blockedUser = relation.followingId === userId 
+        ? relation.follower 
+        : relation.following;
+        
+      return {
+        id: blockedUser.id,
+        username: blockedUser.username,
+        email: blockedUser.email,
+      };
+    });
+    
+    res.json({ blockedUsers: formattedBlocked });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error retrieving blocked users." });
+  }
+});
+
+// Get Suggested Friends
 friendRouter.get("/suggested", async (req, res) => {
   const userId = req.userId;
+  
   if (!userId) {
     res.status(401).json({ message: "Unauthorized. Please log in." });
-    return 
+    return;
   }
-
+  
   try {
     // Fetch existing friendships (Accepted, Pending, Blocked)
     const existingRelationships = await prisma.friendship.findMany({
@@ -222,7 +367,7 @@ friendRouter.get("/suggested", async (req, res) => {
         status: true
       }
     });
-
+    
     // Extract already known friend IDs
     const blockedOrFriends = new Set(
       existingRelationships.flatMap(({ followingId, followerId, status }) =>
@@ -231,39 +376,72 @@ friendRouter.get("/suggested", async (req, res) => {
           : []
       )
     );
+    
     blockedOrFriends.add(userId); // Exclude self
-
+    
     // Fetch users who are not in the blocked/friend list
     const potentialFriends = await prisma.user.findMany({
       where: { id: { notIn: Array.from(blockedOrFriends) } },
-      select: { id: true, username: true, email: true}
+      select: { id: true, username: true, email: true }
     });
-
+    
     // Fetch mutual friend count for each potential friend
     const suggestedFriends = await Promise.all(
       potentialFriends.map(async (user) => {
-        const mutualCount = await prisma.friendship.count({
+        // This query is incorrect and won't give mutual friends count
+        // Need to fix the logic for counting mutual friends
+        const userFriends = await prisma.friendship.findMany({
           where: {
             status: "ACCEPTED",
             OR: [
-              {
-                followingId: userId,
-                followerId: user.id,
-              },
-              {
-                followingId: user.id,
-                followerId: userId,
-              },
+              { followingId: user.id, followerId: { not: userId } },
+              { followerId: user.id, followingId: { not: userId } },
             ],
           },
+          select: {
+            followingId: true,
+            followerId: true,
+          },
         });
-
-        return { ...user, mutualFriends: mutualCount };
+        
+        const userFriendIds = new Set(
+          userFriends.flatMap(({ followingId, followerId }) => [followingId, followerId])
+            .filter(id => id !== user.id)
+        );
+        
+        const currentUserFriends = await prisma.friendship.findMany({
+          where: {
+            status: "ACCEPTED",
+            OR: [
+              { followingId: userId },
+              { followerId: userId },
+            ],
+          },
+          select: {
+            followingId: true,
+            followerId: true,
+          },
+        });
+        
+        const currentUserFriendIds = new Set(
+          currentUserFriends.flatMap(({ followingId, followerId }) => [followingId, followerId])
+            .filter(id => id !== userId)
+        );
+        
+        const mutualFriends = [...userFriendIds].filter(id => currentUserFriendIds.has(id));
+        
+        return { 
+          ...user, 
+          mutualFriendsCount: mutualFriends.length,
+          // Optional: Include the mutual friends details if needed
+          mutualFriendsDetails: mutualFriends.length > 0 ? mutualFriends : undefined
+        };
       })
     );
-
-    suggestedFriends.sort((a, b) => b.mutualFriends - a.mutualFriends);
-    console.log(suggestedFriends);
+    
+    // Sort by mutual friends count (highest first)
+    suggestedFriends.sort((a, b) => b.mutualFriendsCount - a.mutualFriendsCount);
+    
     res.json({ suggestedFriends });
   } catch (error) {
     console.error(error);
@@ -271,5 +449,66 @@ friendRouter.get("/suggested", async (req, res) => {
   }
 });
 
+// Get friendship status with a specific user
+friendRouter.get("/status/:friendId", async (req, res) => {
+  const { friendId } = req.params;
+  const userId = req.userId;
+  
+  try {
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { followingId: userId, followerId: friendId },
+          { followingId: friendId, followerId: userId },
+        ],
+      },
+    });
+    
+    if (!friendship) {
+      res.json({ status: "NONE" });
+      return;
+    }
+    
+    // Determine the direction of the friendship for PENDING status
+    interface RelationshipDetails {
+      status: string;
+      direction?: string;
+    }
+    
+    const relationshipDetails: RelationshipDetails = { status: friendship.status };
+    
+    if (friendship.status === "PENDING") {
+      const isRequestReceived = friendship.followingId === userId;
+      relationshipDetails.direction = isRequestReceived ? "RECEIVED" : "SENT";
+    }
+    
+    res.json(relationshipDetails);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error retrieving friendship status." });
+  }
+});
+
+// Get Friend Count
+friendRouter.get("/count", async (req, res) => {
+  const userId = req.userId;
+  
+  try {
+    const friendCount = await prisma.friendship.count({
+      where: {
+        status: "ACCEPTED",
+        OR: [
+          { followingId: userId },
+          { followerId: userId },
+        ],
+      },
+    });
+    
+    res.json({ count: friendCount });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error retrieving friend count." });
+  }
+});
 
 export default friendRouter;

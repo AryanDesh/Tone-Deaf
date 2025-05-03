@@ -21,6 +21,82 @@ playlistRouter.get('/all-playlist', async(req, res) => {
     }
 })
 
+playlistRouter.get('/room/:roomCode', async (req, res) => {
+  try {
+    const { roomCode } = req.params;
+    const userId = req.userId; // From auth middleware
+    
+    // First, verify the room exists
+    const room = await prisma.room.findUnique({
+      where: { code: roomCode },
+      select: { id: true }
+    });
+
+    if (!room) {
+      res.status(404).json({ success: false, message: "Room not found" });
+      return ;
+    }
+
+    // Find all shared playlists in this room
+    const sharedPlaylists = await prisma.sharedPlaylist.findMany({
+      where: {
+        roomId: room.id
+      },
+      include: {
+        playlist: {
+          include: {
+            user: {
+              select: {
+                username: true,
+                id: true
+              }
+            },
+            playlistSong: {
+              include: {
+                song: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Format the response
+    const formattedPlaylists = sharedPlaylists.map(sharedPlaylist => {
+      return {
+        id: sharedPlaylist.playlist.id,
+        name: sharedPlaylist.playlist.name,
+        sharedPlaylistId: sharedPlaylist.id,
+        owner: {
+          id: sharedPlaylist.playlist.user.id,
+          username: sharedPlaylist.playlist.user.username,
+          isCurrentUser: sharedPlaylist.playlist.user.id === userId
+        },
+        songs: sharedPlaylist.playlist.playlistSong.map(ps => ({
+          id: ps.song.id,
+          title: ps.song.title,
+          artist: ps.song.artist,
+          album: ps.song.album,
+          duration: ps.song.duration
+        }))
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      roomCode,
+      playlists: formattedPlaylists
+    });
+  } catch (error) {
+    console.error('Error fetching shared playlists in room:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch shared playlists',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 playlistRouter.get('/shared-playlist', async (req, res) => {
     try {
       const userId = req.userId 

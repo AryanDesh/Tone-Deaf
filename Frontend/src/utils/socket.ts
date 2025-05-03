@@ -12,17 +12,31 @@ export type StreamSongPayload = {
 };
 
 export type IUser = {
-  id : string,
-  username : string,
-  playlist? : [],
-  likedId? : string,
-  followers? : [],
-  following? : [],
-  room? :[]
+  id: string,
+  username: string,
+  playlist?: [],
+  likedId?: string,
+  followers?: [],
+  following?: [],
+  room?: []
 }
 
-export type ICreatePlaylist = { playlistName : string, roomCode: string, songId :string };
-export type IAddSongToPlaylist = { playlistId: number, roomCode: string, songId :string };
+export type PresenceData = {
+  userId: string,
+  status: 'online' | 'offline'
+};
+
+export type BatchPresenceData = {
+  userIds: string[],
+  status: 'online' | 'offline'
+}[];
+
+export type GetPresencePayload = {
+  userIds: string[]
+};
+
+export type ICreatePlaylist = { playlistName: string, roomCode: string, songId: string };
+export type IAddSongToPlaylist = { playlistId: number, roomCode: string, songId: string };
 
 // Server -> Client
 export type ServerToClientEvents = {
@@ -31,27 +45,35 @@ export type ServerToClientEvents = {
   'user-joined': (data: { userId: string }) => void;
   'user-left-room': (data: { userId: string }) => void;
   'song-streamed': (data: { song: Song; user: IUser }) => void;
-  'song-paused' : (data : {userId : string}) => void;
-  'song-played' : (data : {userId : string}) => void;
-  'playlist-created' : (
-    data : {
+  'song-paused': (data: { userId: string }) => void;
+  'song-played': (data: { userId: string }) => void;
+  'playlist-created': (
+    data: {
       playlist: {
-      id: number,
+        id: number,
+        name: string,
+        songs: Song[]
+      },
+      createdBy: IUser,
+      initialSong?: Song,
+    }) => void;
+  'song-added-to-playlist': (data: {
+    playlist: {
+      playlistId: number,
       name: string,
+      createdBy: {
+        id: string,
+        username: string
+      },
       songs: Song[]
     },
-    createdBy: IUser,
-    initialSong?: Song,}) => void;
-  'song-added-to-playlist' : (data : {playlist : {
-    playlistId: number,
-    name: string,
-    createdBy: {
-      id: string,
-      username: string
-    },
-    songs : Song[]} ,
-    song : Song}) => void;
-  'Error': (msg: string) => void;
+    song: Song
+  }) => void;
+  'error': (msg: string) => void;
+  'warning': (msg: string) => void;
+  // Presence events
+  'user:presence': (data: PresenceData) => void;
+  'presence:update': (data: BatchPresenceData) => void;
 };
 
 // Client -> Server
@@ -61,10 +83,15 @@ export type ClientToServerEvents = {
   'leave-room': (roomId: string) => void;
   'send-message': (message: Message, roomId: string) => void;
   'stream-song': (data: StreamSongPayload) => void;
-  'pause-song' : (data : StreamSongPayload) => void;
-  'play-song' : (data : StreamSongPayload) => void;
-  'create-playlist' : (data : ICreatePlaylist ) => void;
-  'add-song-to-playlist' : (data : IAddSongToPlaylist) =>  void;
+  'pause-song': (data: { roomCode: string }) => void;
+  'play-song': (data: { roomCode: string }) => void;
+  'next-song': (data: StreamSongPayload) => void;
+  'previous-song': (data: StreamSongPayload) => void;
+  'create-playlist': (data: ICreatePlaylist) => void;
+  'add-song-to-playlist': (data: IAddSongToPlaylist) => void;
+  // Presence events
+  'get:presence': (data: GetPresencePayload) => void;
+  'set:presence': (status: 'online' | 'offline') => void;
 };
 
 const Socket_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000/collab";
@@ -75,7 +102,7 @@ const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(Socket_URL
 });
 
 socket.on("connect", () => {
-  console.log("Connected to Socket.IO server 1");
+  console.log("Connected to Socket.IO server");
 });
 
 socket.on("disconnect", () => {

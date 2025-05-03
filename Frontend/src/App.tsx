@@ -1,6 +1,6 @@
 import { Routes, BrowserRouter, Route } from "react-router"
 import { Homepage } from "./pages"
-import { AudioContextProvider, CollabProvider } from "./context"
+import { AudioContextProvider, CollabProvider, FriendsProvider } from "./context"
 import { ProtectedRoute } from "./components"
 import Pages from "./pages/Pages"
 import CollabRoom from "./sections/Rooms"
@@ -10,6 +10,8 @@ function App() {
       
       <AudioContextProvider >
       <CollabProvider> 
+      <FriendsProvider>
+
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Homepage />} />
@@ -17,6 +19,7 @@ function App() {
             <Route path="/collab" element={<ProtectedRoute ><CollabRoom/></ProtectedRoute>}/>
           </Routes>
         </BrowserRouter>
+      </FriendsProvider>
       </CollabProvider>
       </AudioContextProvider>
       </div>

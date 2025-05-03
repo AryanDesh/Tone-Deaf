@@ -23,6 +23,17 @@ import {
 } from "lucide-react";
 import type { ChatMessage, Song } from "../types/songTypes";
 
+interface ISharedPlaylists {
+  playlistId: number,
+  name: string,
+  sharedPlaylistId: number,
+  owner: {
+    id: string,
+    username: string,
+    isCurrentUser: boolean
+  },
+  songs: Song[]
+}
 interface CollaborationPageProps {
   showCollaborationModal: boolean;
   toggleCollaborationModal: () => void;
@@ -43,6 +54,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
   const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
   const [playlistName, setPlaylistName] = useState("");
+  const [sharedPlaylists, setSharedPlaylists] = useState<ISharedPlaylists[]>([]);
   
   // References for animations
   const pageRef = useRef<HTMLDivElement>(null);
@@ -63,6 +75,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     currSong, 
     isPlaying, 
     setIsPlaying, 
+    setCurrSong,
     togglePlay, 
     playlist,
     setPlaylist 
@@ -70,6 +83,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
 
   // Entry animations
   useEffect(() => {
+    connectSocket();
     const ctx = gsap.context(() => {
       gsap.from(".collab-header", { opacity: 0, y: -20, duration: 0.5 });
       gsap.from(".collab-card", {
@@ -100,6 +114,8 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
 
   // Chat message handling
   useEffect(() => {
+    getSharedPlaylists();
+
     const handleReceiveMessage = (update: { sender: string, content: string }) => {
       setChatMessages((prev) => [
         ...prev,
@@ -161,8 +177,9 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
         }
       ]);
 
-      setPlaylist(data.playlist.songs, data.playlist.id , data.createdBy.username , data.playlist.name)
-      
+      setPlaylist(data.playlist.songs, data.playlist.id , data.createdBy.username , data.playlist.name);
+      console.log(playlist);
+
       // Hide create playlist form
       setShowCreatePlaylist(false);
     };
@@ -222,9 +239,33 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     setChatMessages([]);
   };
 
+  const getSharedPlaylists = async () => {
+    if (!roomId) return;
+    
+    try {
+      const response = await fetch(`/api/playlists/room/${roomId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch shared playlists: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      if (data.success && data.playlists) {
+        setSharedPlaylists(data.playlists);
+      }
+    } catch (error) {
+      console.error("Error fetching shared playlists:", error);
+    }
+  }
+  
   const sendMessage = (message: string) => {
     if (!message.trim() || !roomId) return;
-    connectSocket();
+    if(!socket) connectSocket();
     const msg = { sender: "You", content: message };
     socket.emit("send-message", msg, roomId);
     
@@ -249,13 +290,11 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     
     if (isPlaying) {
       socket.emit("pause-song", { 
-        songId: currSong.id, 
         roomCode: roomId 
       });
       setIsPlaying(false);
     } else {
       socket.emit("play-song", { 
-        songId: currSong.id, 
         roomCode: roomId 
       });
       setIsPlaying(true);
@@ -272,7 +311,7 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
       songId: songId || ""
     });
     
-    setPlaylistName("");
+    setPlaylistName(playlistName);
   };
   
   const addSongToPlaylist = (playlistId: number) => {
@@ -561,14 +600,20 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                         ) : (
                           <div className="space-y-1">
                             {playlistSongs.map(song => (
-                              <div 
-                                key={song.id}
-                                className={`text-sm p-1 rounded ${
-                                  currSong?.id === song.id ? 'bg-purple-900/50' : ''
-                                }`}
-                              >
-                                {song.title} - {song.artist}
-                              </div>
+                              <button onClick={() => {
+                                socket.emit('stream-song', {roomCode : roomId! , songId : song.id});
+                                setCurrSong(song);
+                                setIsPlaying(true);
+                              }}>
+                                <div 
+                                  key={song.id}
+                                  className={`text-sm p-1 rounded ${
+                                    currSong?.id === song.id ? 'bg-purple-900/50' : ''
+                                    }`}
+                                    >
+                                  {song.title} - {song.artist}
+                                </div>
+                              </button>
                             ))}
                           </div>
                         )}
@@ -579,6 +624,45 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
                       No active playlist
                     </div>
                   )}
+
+                  {/* Other shared playlists in this room */}
+                  <div className="bg-gray-700 p-3 rounded">
+                    {sharedPlaylists.map((playlist) => (
+                      <button
+                        key={playlist.sharedPlaylistId}
+                        onClick={() =>
+                          setPlaylist(
+                            playlist.songs,
+                            playlist.playlistId,
+                            playlist.owner.username,
+                            playlist.name
+                          )
+                        }
+                        className="w-full text-left"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div>
+                            <p className="font-medium">{playlist.name}</p>
+                            <p className="text-xs text-gray-400">
+                              by {playlist.owner.username || "Unknown"} • {playlist.songs.length} songs
+                            </p>
+                          </div>
+                          {currSong && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); 
+                                addSongToPlaylist(playlist.playlistId);
+                              }}
+                              className="text-purple-400 hover:text-purple-300"
+                              title="Add current song"
+                            >
+                              <ListPlus className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 
                 <CustomButton

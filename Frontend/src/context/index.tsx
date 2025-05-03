@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react"
-import type { Song } from "../types/songTypes"
+import React, { createContext, useContext, useState, type ReactNode, useCallback, useEffect } from "react"
+import type { Song, Friend } from "../types/songTypes"
+import axios from "axios"
 
 // Define node structure for doubly linked list
 interface PlaylistNode {
@@ -330,3 +331,222 @@ export const useCollabContext = () => {
   if (!context) throw new Error("useCollabContext must be used within CollabProvider")
   return context
 }
+
+// FriendsContext Setup
+interface PendingRequest {
+  requestId: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+  createdAt: string;
+}
+
+interface FriendsContextType {
+  friends: Friend[];
+  friendSuggestions: Friend[];
+  pendingRequests: PendingRequest[];
+  sentRequests: PendingRequest[];
+  loading: boolean;
+  error: string | null;
+  setError: (error: string | null) => void;
+  refreshFriends: () => Promise<void>;
+  acceptFriendRequest: (friendId: string) => Promise<void>;
+  rejectFriendRequest: (friendId: string) => Promise<void>;
+  cancelFriendRequest: (friendId: string) => Promise<void>;
+  sendFriendRequest: (friendId: string) => Promise<void>;
+  removeFriend: (friendId: string) => Promise<void>;
+}
+
+const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
+
+export const FriendsProvider = ({ children }: { children: ReactNode }) => {
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendSuggestions, setFriendSuggestions] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<PendingRequest[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const getFriends = async () => {
+    try {
+      const { data } = await axios.get<{ friends: Friend[] }>(
+        "http://localhost:5000/api/friends/",
+        { withCredentials: true }
+      );
+      setFriends(data.friends);
+    } catch (error) {
+      setError("Failed to load friends");
+      console.error("Error fetching friends:", error);
+      setFriends([]);
+    }
+  };
+
+  const getFriendSuggestions = async () => {
+    try {
+      const { data } = await axios.get<{ suggestedFriends: Friend[] }>(
+        "http://localhost:5000/api/friends/suggested",
+        { withCredentials: true }
+      );
+      setFriendSuggestions(data.suggestedFriends);
+    } catch (error) {
+      setError("Failed to load suggestions");
+      console.error("Error fetching friend suggestions:", error);
+      setFriendSuggestions([]);
+    }
+  };
+
+  const getPendingRequests = async () => {
+    try {
+      const { data } = await axios.get<{ pendingRequests: PendingRequest[] }>(
+        "http://localhost:5000/api/friends/pending/received",
+        { withCredentials: true }
+      );
+      setPendingRequests(data.pendingRequests);
+    } catch (error) {
+      setError("Failed to load pending requests");
+      console.error("Error fetching pending requests:", error);
+      setPendingRequests([]);
+    }
+  };
+
+  const getSentRequests = async () => {
+    try {
+      const { data } = await axios.get<{ sentRequests: PendingRequest[] }>(
+        "http://localhost:5000/api/friends/pending/sent",
+        { withCredentials: true }
+      );
+      setSentRequests(data.sentRequests);
+    } catch (error) {
+      setError("Failed to load sent requests");
+      console.error("Error fetching sent requests:", error);
+      setSentRequests([]);
+    }
+  };
+
+  const refreshFriends = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        getFriends(),
+        getFriendSuggestions(),
+        getPendingRequests(),
+        getSentRequests()
+      ]);
+    } catch (error) {
+      console.error("Error refreshing friends data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const acceptFriendRequest = async (friendId: string) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/friends/accept/${friendId}`,
+        {},
+        { withCredentials: true }
+      );
+      // Refresh data after accepting
+      getPendingRequests();
+      getFriends();
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      setError("Failed to accept friend request");
+    }
+  };
+
+  const rejectFriendRequest = async (friendId: string) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/friends/reject/${friendId}`,
+        {},
+        { withCredentials: true }
+      );
+      // Refresh pending requests after rejecting
+      getPendingRequests();
+    } catch (error) {
+      console.error("Error rejecting friend request:", error);
+      setError("Failed to reject friend request");
+    }
+  };
+
+  const cancelFriendRequest = async (friendId: string) => {
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/friends/request/${friendId}`,
+        { withCredentials: true }
+      );
+      // Refresh sent requests after canceling
+      getSentRequests();
+    } catch (error) {
+      console.error("Error canceling friend request:", error);
+      setError("Failed to cancel friend request");
+    }
+  };
+
+  const sendFriendRequest = async (friendId: string) => {
+    try {
+      await axios.post(
+        `http://localhost:5000/api/friends/request/${friendId}`,
+        {},
+        { withCredentials: true }
+      );
+      // Refresh friend suggestions and sent requests
+      getFriendSuggestions();
+      getSentRequests();
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      setError("Failed to send friend request");
+    }
+  };
+
+  const removeFriend = async (friendId: string) => {
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/friends/remove/${friendId}`,
+        { withCredentials: true }
+      );
+      // Refresh friends list after removing
+      getFriends();
+      getFriendSuggestions();
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      setError("Failed to remove friend");
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    refreshFriends();
+  }, [refreshFriends]);
+
+  return (
+    <FriendsContext.Provider 
+      value={{
+        friends,
+        friendSuggestions,
+        pendingRequests,
+        sentRequests,
+        loading,
+        error,
+        setError,
+        refreshFriends,
+        acceptFriendRequest,
+        rejectFriendRequest,
+        cancelFriendRequest,
+        sendFriendRequest,
+        removeFriend
+      }}
+    >
+      {children}
+    </FriendsContext.Provider>
+  );
+};
+
+export const useFriendsContext = () => {
+  const context = useContext(FriendsContext);
+  if (!context) throw new Error("useFriendsContext must be used within FriendsProvider");
+  return context;
+};

@@ -148,19 +148,14 @@ async function setupSocketServer() {
     }
   } catch (error) {
     console.error('Error in setupSocketServer:', error);
-    // Continue running the server even if Redis setup fails
   }
 }
-
-// Handle unexpected errors
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
-  // Keep the process running
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Keep the process running
 });
 
 // Start server

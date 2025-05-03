@@ -22,7 +22,57 @@ export const sockets = () => {
     
     setPresence();
     const heartbeat = setInterval(setPresence, 20000);
-
+    
+    socket.on("get:presence", async ({ userIds }: { userIds: string[] }) => {
+      try {
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+          return;
+        }
+        
+        console.log(`Received presence request for users: ${userIds.join(', ')}`);
+        
+        // Get online status for each requested user
+        const presencePromises = userIds.map(async (userId) => {
+          const key = `presence:user:${userId}`;
+          try {
+            const status = await pubClient!.get(key);
+            return { userId, online: status === 'online' };
+          } catch (error) {
+            console.error(`Error getting presence for ${userId}:`, error);
+            return { userId, online: false };
+          }
+        });
+        
+        const presenceResults = await Promise.all(presencePromises);
+        
+        // Group by online status for more efficient response
+        const onlineUsers = presenceResults.filter(u => u.online).map(u => u.userId);
+        const offlineUsers = presenceResults.filter(u => !u.online).map(u => u.userId);
+        
+        const response = [];
+        if (onlineUsers.length > 0) {
+          response.push({ userIds: onlineUsers, status: 'online' });
+        }
+        if (offlineUsers.length > 0) {
+          response.push({ userIds: offlineUsers, status: 'offline' });
+        }
+        
+        // Send batch update to client
+        socket.emit('presence:update', response);
+        
+        // Also send individual updates for compatibility
+        presenceResults.forEach(result => {
+          socket.emit('user:presence', { 
+            userId: result.userId, 
+            status: result.online ? 'online' : 'offline' 
+          });
+        });
+        
+      } catch (error) {
+        console.error('Error processing presence request:', error);
+        // Continue execution - presence is non-critical
+      }
+    });
     // CREATE ROOM
     socket.on("create-room", async (name: string) => {
       try {
