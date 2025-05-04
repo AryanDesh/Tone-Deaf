@@ -93,7 +93,7 @@ export const useSocketManager = () => {
         console.log("User left:", userId);
       });
       
-      socket.on("Error", (msg: string) => {
+      socket.on("error", (msg: string) => {
         console.error("Socket error:", msg);
         alert(msg);
       });

@@ -11,6 +11,7 @@ import { chunkRouter, signupRouter, loginRouter, userRouter, songRouter, playlis
 import { verifyJwt } from "./utils/jwtFunc";
 import { parse as parseCookie } from "cookie"; 
 import { Request, Response, NextFunction } from 'express';
+import searchRouter from "./routes/search";
 
 dotenv.config();
 
@@ -42,6 +43,8 @@ app.use('/api/user', userRouter);
 app.use('/api/song', songRouter);
 app.use('/api/user/playlist', playlistRouter);
 app.use('/api/friends/', friendRouter);
+app.use('/api/search/', searchRouter);
+
 
 // Auth check
 app.get('/api/me', async (req, res) => {

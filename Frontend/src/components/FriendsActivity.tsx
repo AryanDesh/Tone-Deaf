@@ -1,50 +1,76 @@
 import type React from "react";
-import type { Friend } from "../types/songTypes";
 import { Music } from "lucide-react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useFriendsContext } from "../context";
+import socket from "../utils/socket";
 
-interface FriendsActivityProps {
-  friends?: Friend[];
-}
-
-const FriendsActivity: React.FC<FriendsActivityProps> = ({ friends: propFriends }) => {
-  const [friends, setFriends] = useState<Friend[]>(propFriends || []);
-  const [loading, setLoading] = useState<boolean>(!propFriends);
-
-  const getFriends = async () => {
-    // Only fetch if not provided via props
-    if (!propFriends) {
-      try {
-        setLoading(true);
-        const { data } = await axios.get<{ friends: Friend[] }>(
-          "http://localhost:5000/api/friends/",
-          { withCredentials: true }
-        );
-        setFriends(data.friends);
-      } catch (error) {
-        console.error("Error fetching friends for activity:", error);
-        setFriends([]);
-      } finally {
-        setLoading(false);
+const FriendsActivity: React.FC = () => {
+  const { friends, loading } = useFriendsContext();
+  // Track online status of friends with a state object
+  const [onlineStatus, setOnlineStatus] = useState<Record<string, boolean>>({});
+  
+  // Socket connection and presence monitoring
+  useEffect(() => {
+    // Connect to socket if not already connected
+    if (!socket.connected) {
+      socket.connect();
+    }
+    
+    // Initial setup of online status from friend data
+    const initialOnlineStatus: Record<string, boolean> = {};
+    friends.forEach(friend => {
+      initialOnlineStatus[friend.id] = friend.online || false;
+    });
+    setOnlineStatus(initialOnlineStatus);
+    
+    // Listen for presence events
+    socket.on('user:presence', (data: { userId: string, status: 'online' | 'offline' }) => {
+      setOnlineStatus(prev => ({
+        ...prev,
+        [data.userId]: data.status === 'online'
+      }));
+    });
+    
+    // Add handler for presence response
+    socket.on('presence:update', (data: { userIds: string[], status: 'online' | 'offline' }[]) => {
+      setOnlineStatus(prev => {
+        const newStatus = {...prev};
+        data.forEach(item => {
+          item.userIds.forEach(userId => {
+            newStatus[userId] = item.status === 'online';
+          });
+        });
+        return newStatus;
+      });
+    });
+    
+    // Request initial presence data
+    if (friends.length > 0) {
+      socket.emit('get:presence', { userIds: friends.map(friend => friend.id) });
+    }
+    
+    // Clean up socket listeners
+    return () => {
+      socket.off('user:presence');
+      socket.off('presence:update');
+    };
+  }, [friends]);
+  
+  // Set up a regular interval to refresh presence data
+  useEffect(() => {
+    const presenceInterval = setInterval(() => {
+      if (friends.length > 0) {
+        socket.emit('get:presence', { userIds: friends.map(friend => friend.id) });
       }
-    }
+    }, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(presenceInterval);
+  }, [friends]);
+  
+  // Helper function to get current online status
+  const isUserOnline = (userId: string) => {
+    return onlineStatus[userId] || false;
   };
-
-  useEffect(() => {
-    if (propFriends) {
-      setFriends(propFriends);
-    } else {
-      getFriends();
-    }
-  }, [propFriends]);
-
-  // Update friends when propFriends changes
-  useEffect(() => {
-    if (propFriends) {
-      setFriends(propFriends);
-    }
-  }, [propFriends]);
 
   return (
     <div className="bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg rounded-lg p-6">
@@ -66,12 +92,12 @@ const FriendsActivity: React.FC<FriendsActivityProps> = ({ friends: propFriends 
               <div className="flex justify-start items-center">
                 <span
                   className={`w-3 h-3 rounded-full border-2 border-gray-800 ${
-                    friend.online ? "bg-green-500" : "bg-gray-500"
+                    isUserOnline(friend.id) ? "bg-green-500" : "bg-gray-500"
                   }`}
                 ></span>
                 <span className="ml-5">
                   <img
-                    src={friend.avatar || "/placeholder.svg?height=40&width=40"}
+                    src={friend.avatar || "/api/placeholder/40/40"}
                     alt={friend.username}
                     width={40}
                     height={40}
@@ -87,7 +113,7 @@ const FriendsActivity: React.FC<FriendsActivityProps> = ({ friends: propFriends 
                     </p>
                   ) : (
                     <p className="text-sm text-gray-500">
-                      {friend.online ? "Online" : "Offline"}
+                      {isUserOnline(friend.id) ? "Online" : "Offline"}
                     </p>
                   )}
                 </span>
