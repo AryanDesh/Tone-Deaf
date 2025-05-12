@@ -51,10 +51,12 @@ const ZoomIn = () => {
       </div>
       <section>
         <div ref={image_container} className='zoom-img-container perspective flex items-center justify-center h-screen w-screen  '>
-          <img ref={img} className='image h-screen' src={bg} alt="" />
-          <div className='text-white absolute flex flex-col items-center justify-center'>
-            <h1 ref={text1} className='text-[150px] '>
-              <span className='text-stroke'>SCROLL TO</span> ENTER
+        <img ref={img} className='image h-screen w-screen object-cover absolute z-[-1]' src={bg} alt="" />
+          <div className='text-gray-350 absolute inset-0 flex flex-col items-center justify-center text-center'>
+          <h1 ref={text1} className='text-[150px] '>
+          Dive In. <span className='text-stroke'> Collaborate.</span>
+              <span className='text-stroke'> Feel </span> the
+              <span className='text-stroke'> Beat.</span>
             </h1>
             <p ref={text2} className='opacity-50 w-48 text-[13px] text-center'>
               {" "}

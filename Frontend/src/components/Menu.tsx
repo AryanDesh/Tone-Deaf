@@ -235,7 +235,7 @@ const Menu: React.FC<MenuProps> = ({ activePage, setActivePage }) => {
                       <div className="absolute inset-0 bg-black scale-y-0 opacity-0 transition-all duration-500 ease-in-out group-hover:scale-y-100 group-hover:opacity-100"></div>
 
                       {/* Menu Text */}
-                      <p className="z-10 uppercase font-bold text-4xl md:text-[4.625em] leading-[0.75] transition-all duration-500 ease-in-out group-hover:-translate-y-2 group-hover:text-white relative">
+                      <p className="z-10 uppercase font-bold text-4xl text-black md:text-[4em] leading-[0.75] transition-all duration-500 ease-in-out  group-hover:text-white relative">
                         {item.title}
                       </p>
 

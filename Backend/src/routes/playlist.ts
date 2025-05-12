@@ -24,9 +24,7 @@ playlistRouter.get('/all-playlist', async(req, res) => {
 playlistRouter.get('/room/:roomCode', async (req, res) => {
   try {
     const { roomCode } = req.params;
-    const userId = req.userId; // From auth middleware
-    
-    // First, verify the room exists
+    const userId = req.userId;
     const room = await prisma.room.findUnique({
       where: { code: roomCode },
       select: { id: true }
@@ -202,8 +200,13 @@ playlistRouter.get('/:playlistId', async (req, res) => {
 
 
 playlistRouter.post('/create', async (req, res) => {
-    const { userId, name } = req.body;
+    const { name } = req.body;
+    const userId = req.userId;
 
+    if (!userId) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return ;
+    }
     try {
         const playlist = await prisma.playlist.create({
             data: {
@@ -260,7 +263,13 @@ playlistRouter.delete('/:playlistId/remove-song', async (req, res) => {
 });
 
 playlistRouter.post('/like', async (req, res) => {
-    const { userId, songId } = req.body;
+    const { songId } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return ;
+    }
 
     const user = await prisma.user.findUnique({
         where : {id : userId}
@@ -287,7 +296,13 @@ playlistRouter.post('/like', async (req, res) => {
 });
 
 playlistRouter.post('/dislike', async (req, res) => {
-    const { userId , songId} = req.body;
+    const { songId} = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return ;
+    }
     const user = await prisma.user.findUnique({
         where : {id : userId}
     })

@@ -41,7 +41,7 @@ app.use('/api/signup', signupRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/user', userRouter);
 app.use('/api/song', songRouter);
-app.use('/api/user/playlist', playlistRouter);
+app.use('/api/playlist', playlistRouter);
 app.use('/api/friends/', friendRouter);
 app.use('/api/search/', searchRouter);
 
