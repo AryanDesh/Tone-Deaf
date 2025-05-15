@@ -550,3 +550,100 @@ export const useFriendsContext = () => {
   if (!context) throw new Error("useFriendsContext must be used within FriendsProvider");
   return context;
 };
+
+import { indexDBUtils } from '../utils/indexedDB';
+
+interface OfflineContextType {
+  isOffline: boolean;
+  recentSongs: Song[];
+  addRecentSong: (song: Song) => Promise<void>;
+  getOfflineSong: (songId: string) => Promise<Song | null>;
+  cacheHlsData: (songId: string, url: string, data: ArrayBuffer) => Promise<void>;
+  getHlsData: (songId: string, url: string) => Promise<ArrayBuffer | null>;
+  isSongCached: (songId: string) => Promise<boolean>;
+}
+
+const OfflineContext = createContext<OfflineContextType | undefined>(undefined);
+
+export const useOfflineContext = () => {
+  const context = useContext(OfflineContext);
+  if (context === undefined) {
+    throw new Error('useOfflineContext must be used within an OfflineProvider');
+  }
+  return context;
+};
+
+interface OfflineProviderProps {
+  children: ReactNode;
+}
+
+export const OfflineProvider: React.FC<OfflineProviderProps> = ({ children }) => {
+  const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
+  const [recentSongs, setRecentSongs] = useState<Song[]>([]);
+
+  // Initialize and load recent songs
+  useEffect(() => {
+    const loadRecentSongs = async () => {
+      await indexDBUtils.initDB();
+      const songs = await indexDBUtils.getRecentSongs();
+      setRecentSongs(songs);
+    };
+
+    loadRecentSongs();
+  }, []);
+
+  // Listen for online/offline events
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const addRecentSong = async (song: Song) => {
+    // Add song to recent songs in IndexedDB
+    await indexDBUtils.addRecentSong(song);
+    
+    // Update the local state
+    const updatedSongs = await indexDBUtils.getRecentSongs();
+    setRecentSongs(updatedSongs);
+  };
+
+  const getOfflineSong = async (songId: string): Promise<Song | null> => {
+    return await indexDBUtils.getSong(songId);
+  };
+
+  const cacheHlsData = async (songId: string, url: string, data: ArrayBuffer): Promise<void> => {
+    await indexDBUtils.cacheHlsData(songId, url, data);
+  };
+
+  const getHlsData = async (songId: string, url: string): Promise<ArrayBuffer | null> => {
+    return await indexDBUtils.getHlsData(songId, url);
+  };
+
+  const isSongCached = async (songId: string): Promise<boolean> => {
+    return await indexDBUtils.isSongCached(songId);
+  };
+
+  const value = {
+    isOffline,
+    recentSongs,
+    addRecentSong,
+    getOfflineSong,
+    cacheHlsData,
+    getHlsData,
+    isSongCached
+  };
+
+  return (
+    <OfflineContext.Provider value={value}>
+      {children}
+    </OfflineContext.Provider>
+  );
+};

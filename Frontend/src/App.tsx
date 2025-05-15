@@ -1,17 +1,17 @@
 import { Routes, BrowserRouter, Route } from "react-router"
 import { Homepage } from "./pages"
-import { AudioContextProvider, CollabProvider, FriendsProvider } from "./context"
+import { AudioContextProvider, CollabProvider, FriendsProvider, OfflineProvider } from "./context"
 import { ProtectedRoute } from "./components"
 import Pages from "./pages/Pages"
 import CollabRoom from "./sections/Rooms"
 function App() {
   return (
     <div className="flex justify-center w-100dvw h-100-dvh">
-      
+      <OfflineProvider>
+
       <AudioContextProvider >
       <CollabProvider> 
       <FriendsProvider>
-
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Homepage />} />
@@ -22,6 +22,7 @@ function App() {
       </FriendsProvider>
       </CollabProvider>
       </AudioContextProvider>
+      </OfflineProvider>
       </div>
   )
 }
