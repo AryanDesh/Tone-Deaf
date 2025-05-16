@@ -40,7 +40,7 @@ const CollaborationModal: React.FC<CollaborationModalProps> = ({ friends, toggle
                     className="mr-2 rounded text-purple-600 focus:ring-purple-600"
                   />
                   <label htmlFor={`friend-${friend.id}`} className="text-white">
-                    {friend.name}
+                    {friend.username}
                   </label>
                 </div>
               ))}

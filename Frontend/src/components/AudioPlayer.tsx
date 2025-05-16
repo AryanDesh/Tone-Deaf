@@ -8,7 +8,6 @@ import { useSocketManager } from "../context/socket";
 
 interface AudioPlayerProps {
   src: Song,
-  setSrc: (Song: Song) => void
 }
 
 // Define CustomHlsLoader outside the component to prevent recreating on each render
@@ -67,7 +66,7 @@ class CustomHlsLoader extends Hls.DefaultConfig.loader {
   }
 }
 
-const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
+const AudioPlayer: FC<AudioPlayerProps> = ({ src }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [songSrc, setSongSrc] = useState('');
   const [sliderMax, setSliderMax] = useState<number | undefined>(0);
@@ -85,7 +84,6 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
   const { 
     isOffline, 
     addRecentSong, 
-    getOfflineSong, 
     cacheHlsData, 
     getHlsData,
     isSongCached 
@@ -159,7 +157,7 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
       startFragPrefetch: true,
       lowLatencyMode: true,
       loader: CustomHlsLoader,
-      xhrSetup: function(xhr, url) {
+      xhrSetup: function(xhr) {
         // Store the original open method
         const originalOpen = xhr.open;
         
@@ -236,6 +234,7 @@ const AudioPlayer: FC<AudioPlayerProps> = ({ src, setSrc }) => {
     });
     
     hls.on(Hls.Events.ERROR, (event, data) => {
+      if(event) {}
       if (data.fatal) {
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:

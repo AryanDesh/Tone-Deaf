@@ -1,7 +1,7 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import socket from "../utils/socket";
 import { useCollabContext, useAudioContext } from "../context";
-import type { IUser, Message } from "../utils/socket";
+import type { IUser } from "../utils/socket";
 import { Song } from "../types/songTypes";
 
 let connected = false;

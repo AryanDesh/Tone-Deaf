@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.userRouter = exports.songRouter = exports.signupRouter = exports.playlistRouter = exports.loginRouter = exports.friendRouter = exports.chunkRouter = void 0;
+var chunks_1 = require("./chunks");
+Object.defineProperty(exports, "chunkRouter", { enumerable: true, get: function () { return __importDefault(chunks_1).default; } });
+var friends_1 = require("./friends");
+Object.defineProperty(exports, "friendRouter", { enumerable: true, get: function () { return __importDefault(friends_1).default; } });
+var login_1 = require("./login");
+Object.defineProperty(exports, "loginRouter", { enumerable: true, get: function () { return __importDefault(login_1).default; } });
+var playlist_1 = require("./playlist");
+Object.defineProperty(exports, "playlistRouter", { enumerable: true, get: function () { return __importDefault(playlist_1).default; } });
+var signup_1 = require("./signup");
+Object.defineProperty(exports, "signupRouter", { enumerable: true, get: function () { return __importDefault(signup_1).default; } });
+var songs_1 = require("./songs");
+Object.defineProperty(exports, "songRouter", { enumerable: true, get: function () { return __importDefault(songs_1).default; } });
+var user_1 = require("./user");
+Object.defineProperty(exports, "userRouter", { enumerable: true, get: function () { return __importDefault(user_1).default; } });

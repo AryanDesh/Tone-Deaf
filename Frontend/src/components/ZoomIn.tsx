@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 const ZoomIn = () => {
   const bg1 = useRef<HTMLDivElement | null>(null)
   const image_container = useRef<HTMLDivElement | null>(null)
-  const img = useRef<HTMLDivElement | null>(null)
+  const img = useRef<HTMLImageElement | null>(null)
   const text1 = useRef<HTMLDivElement | null>(null)
   const text2 = useRef<HTMLDivElement | null>(null)
   const container= useRef<HTMLDivElement | null>(null)

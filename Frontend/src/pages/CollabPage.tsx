@@ -11,7 +11,6 @@ import { CustomButton } from "../components/ui/custom-button";
 import { CustomInput } from "../components/ui/custom-input";
 import {
   Music,
-  Users,
   Plus,
   LogIn,
   LogOut,
@@ -76,7 +75,6 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
     isPlaying, 
     setIsPlaying, 
     setCurrSong,
-    togglePlay, 
     playlist,
     setPlaylist 
   } = useAudioContext();
@@ -686,7 +684,9 @@ const CollaborationPage: React.FC<CollaborationPageProps> = ({
         />
       )}
       {showPlaylistModal && (
-        <PlaylistModal playlists={[]} togglePlaylistModal={togglePlaylistModal} />
+        <PlaylistModal playlists={[]} togglePlaylistModal={togglePlaylistModal} refreshPlaylists={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       )}
     </div>
   );

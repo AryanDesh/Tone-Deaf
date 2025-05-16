@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AudioContextProvider, CollabProvider, useCollabContext } from "../context"
+import { useCollabContext } from "../context"
 import { SearchBar, StarryBackground , Header, Player } from "../components"
 import { ContactPage, FriendsPage, AboutPage, CollaborationPage, SongPage, PlaylistsPage  } from "./"
 

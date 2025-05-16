@@ -32,7 +32,7 @@ interface MenuProps {
   setActivePage: (page: string) => void
 }
 
-const Menu: React.FC<MenuProps> = ({ activePage, setActivePage }) => {
+const Menu: React.FC<MenuProps> = ({ setActivePage }) => {
   const navRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)

@@ -8,7 +8,7 @@ import RecommendedSongs from "../components/RecommendedSongs"
 import FriendsActivity from "../components/FriendsActivity"
 import PlaylistModal from "../components/PlaylistModal"
 import CollaborationModal from "../components/CollaborationModal"
-import { mockPlaylists, mockFriends } from "../utils/mockData"
+import { mockFriends } from "../utils/mockData"
 import { Song } from "../types/songTypes"
 import { supabase } from "../utils/supe"
 import { useSocketManager } from "../context/socket"
@@ -164,7 +164,9 @@ const SongsPage: React.FC<SongsPageProps> = ({
       </div>
       
       {showPlaylistModal && (
-        <PlaylistModal playlists={mockPlaylists} togglePlaylistModal={togglePlaylistModal} />
+        <PlaylistModal playlists={[]} togglePlaylistModal={togglePlaylistModal} refreshPlaylists={function (): void {
+          throw new Error("Function not implemented.")
+        } } />
       )}
       {showCollaborationModal && (
         <CollaborationModal friends={mockFriends} toggleCollaborationModal={toggleCollaborationModal} />
